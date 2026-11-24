@@ -209,10 +209,10 @@
 
   <!-- Fill a form -->
   <section id="doc-fill" class="doc-view" hidden>
-    <div class="fill-layout">
+    <div class="fill-layout with-preview">
       <div class="form-col">
         <h2 class="view-title">Fill a form</h2>
-        <p class="lede">Upload a blank form or your own template. The site lists every blank, gives Tongue and Quill guidance for each one and downloads the completed form. The file never leaves your device.</p>
+        <p class="lede">Choose a form and fill in each blank. The form beside the blanks shows where each answer goes. The file never leaves your device.</p>
 
         <h3>1. Choose the form</h3>
         <div class="choice-grid compact" role="radiogroup" aria-label="Form" id="formChoices"></div>
@@ -220,26 +220,28 @@
         <div class="btn-row" id="libraryFiles"></div>
         <div id="oconusGuide" class="oconus" hidden></div>
 
-        <h3 id="uploadHeading">2. Upload the blank form</h3>
-        <label class="dropzone" id="dropzone">
-          <input id="fillFile" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-          <strong>Choose a file</strong> or drag it here
-          <span class="hint">Fillable PDF (.pdf) or Word template (.docx)</span>
-        </label>
-        <details class="howto">
-          <summary>How to make your own Word template</summary>
-          <p>Mark each blank one of three ways. The site turns every marked blank into a field.</p>
-          <ul>
-            <li>Highlight the text in yellow, for example a highlighted <em>Firstname M. Lastname</em>.</li>
-            <li>Type the blank in square brackets: [Subject].</li>
-            <li>Type the blank in double braces: {{Date}}.</li>
-          </ul>
-          <p>Blanks with the same text fill together, so [Name] in three places needs to be typed only once.</p>
+        <details class="upload-box" id="uploadBox">
+          <summary id="uploadHeading">Upload your own copy instead</summary>
+          <label class="dropzone" id="dropzone">
+            <input id="fillFile" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            <strong>Choose a file</strong> or drag it here
+            <span class="hint">Fillable PDF (.pdf) or Word template (.docx)</span>
+          </label>
+          <details class="howto">
+            <summary>How to make your own Word template</summary>
+            <p>Mark each blank one of three ways. The site turns every marked blank into a field.</p>
+            <ul>
+              <li>Highlight the text in yellow, for example a highlighted <em>Firstname M. Lastname</em>.</li>
+              <li>Type the blank in square brackets: [Subject].</li>
+              <li>Type the blank in double braces: {{Date}}.</li>
+            </ul>
+            <p>Blanks with the same text fill together, so [Name] in three places needs to be typed only once.</p>
+          </details>
         </details>
         <p class="status" id="fillStatus" role="status"></p>
 
         <div id="fillFieldsWrap" hidden>
-          <h3>3. Fill in the blanks</h3>
+          <h3>2. Fill in the blanks</h3>
           <p class="hint" id="formGuide"></p>
           <div id="fillFields" class="fill-fields"></div>
           <div class="export">
@@ -247,18 +249,29 @@
             <p class="hint" id="fillDownloadStatus" role="status"></p>
           </div>
         </div>
+
+        <details class="howto">
+          <summary>Tongue and Quill reminders</summary>
+          <ul class="tips">
+            <li>Put the bottom line first. State the purpose or the action needed in the first sentence.</li>
+            <li>Use active voice and short sentences. Write "I request," not "It is requested."</li>
+            <li>Write dates as day, month and year: 23 November 2026.</li>
+            <li>Spell out an acronym the first time you use it, then use the acronym.</li>
+            <li>Use the correct grade abbreviation: C1C, Capt, Maj, Lt Col, MSgt.</li>
+            <li>Write signature block names in all capital letters: FIRSTNAME M. LASTNAME.</li>
+            <li>Proofread the finished form before you sign it.</li>
+          </ul>
+        </details>
       </div>
-      <aside class="tips-col" aria-label="Tongue and Quill reminders">
-        <h3>Tongue and Quill reminders</h3>
-        <ul class="tips">
-          <li>Put the bottom line first. State the purpose or the action needed in the first sentence.</li>
-          <li>Use active voice and short sentences. Write "I request," not "It is requested."</li>
-          <li>Write dates as day, month and year: 23 November 2026.</li>
-          <li>Spell out an acronym the first time you use it, then use the acronym.</li>
-          <li>Use the correct grade abbreviation: C1C, Capt, Maj, Lt Col, MSgt.</li>
-          <li>Write signature block names in all capital letters: FIRSTNAME M. LASTNAME.</li>
-          <li>Proofread the finished form before you sign it.</li>
-        </ul>
+
+      <button class="btn primary preview-open form-preview-btn" id="formPreviewOpen" type="button" aria-expanded="false">Show the form</button>
+      <aside class="form-preview-col" aria-label="Form preview">
+        <div class="preview-head">
+          <span>The form</span>
+          <button class="btn ghost preview-close form-preview-close" id="formPreviewClose" type="button">Close</button>
+          <span class="preview-note">The blank you are filling is outlined. The rest of its section is shaded.</span>
+        </div>
+        <div class="fp-scroll"><div id="formPreview"><p class="fp-empty">Choose a form to see it here.</p></div></div>
       </aside>
     </div>
   </section>
@@ -339,6 +352,7 @@
 <script src="app.js"></script>
 <script src="examples.js"></script>
 <script src="forms-library.js"></script>
+<script src="form-preview.js"></script>
 <script src="fill.js"></script>
 <script src="checker.js"></script>
 <script src="feedback.js"></script>

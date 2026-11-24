@@ -84,7 +84,6 @@ async def run(browser, out, label):
 
     # eSSS (LiveCycle form)
     await pg.click(".doc-tab[data-doc=fill]")
-    await pg.click("#libraryFiles button >> nth=0")
     await pg.wait_for_selector(".route-row")
     await pg.fill("#fillFields input >> nth=0", "C1C Test")
     p = await save(pg, "#fillDownload", out, "esss.pdf")
@@ -92,7 +91,6 @@ async def run(browser, out, label):
 
     # Form 99 (both copies)
     await pg.click("#formChoices .choice >> nth=1")
-    await pg.click("#libraryFiles button >> nth=0")
     await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('AFCW IMT 99')")
     await pg.fill("#fillFields input >> nth=0", "Test, Cadet A")
     p = await save(pg, "#fillDownload", out, "f99.pdf")
@@ -109,9 +107,14 @@ async def run(browser, out, label):
 
     # Form 10, Report of Conduct
     await pg.click("#formChoices .choice:has-text('Form 10')")
-    await pg.click("#libraryFiles button >> nth=0")
     await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('AFCW IMT 10')")
+    await pg.wait_for_selector(".fp-page canvas")
+    await pg.get_by_label("1. Cadet name (Last, First, MI)").focus()
+    await pg.wait_for_function("document.querySelectorAll('.fp-box.on').length === 1")
     await pg.get_by_label("1. Cadet name (Last, First, MI)").fill("Morgan, Taylor R")
+    shown = await pg.inner_text(".fp-box.on")
+    painted = await pg.evaluate("(() => { const c = document.querySelector('.fp-page canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let dark = 0; for (let i = 0; i < d.length; i += 400) if (d[i] < 128) dark++; return dark; })()")
+    check(shown == "Morgan, Taylor R" and painted > 50, "form preview draws Form 10, outlines the blank and shows the answer")
     await pg.get_by_label("8. Reporting official memorandum attached").select_option("Yes")
     p = await save(pg, "#fillDownload", out, "f10.pdf")
     f = PdfReader(p).get_fields(); k = "topmostSubform[0].Page1[0]."
@@ -122,7 +125,6 @@ async def run(browser, out, label):
     await pg.click("#formChoices .choice:has-text('Feedback worksheet')")
     href = await pg.get_attribute("#libraryFiles a", "href")
     check(href and (await pg.request.get(URL + href)).ok, "Classification Directory link opens")
-    await pg.click("#libraryFiles button >> nth=0")
     await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('CW Form 724')")
     await pg.get_by_label("Name (Last, First MI)").fill("Diaz, Casey M")
     await pg.get_by_label("Type of assessment").select_option("Mid-term")
@@ -136,7 +138,6 @@ async def run(browser, out, label):
 
     # AF Form 174, general counseling
     await pg.click("#formChoices .choice:has-text('AF Form 174')")
-    await pg.click("#libraryFiles button >> nth=0")
     await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('AF Form 174')")
     await pg.get_by_label("9. Summary of counseling").fill("On 23 November 2026 we discussed formation standards.")
     p = await save(pg, "#fillDownload", out, "f174.pdf")

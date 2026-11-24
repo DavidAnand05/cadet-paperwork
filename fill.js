@@ -9,6 +9,8 @@
   const P = PDFLib;
 
   let formKey = "esss";
+  let fileIdx = 0;      // which file of a multi-form package is open
+  let loadToken = 0;    // ignore a slow load after the cadet has chosen another form
   let current = null;   // { kind: "acro"|"xfa"|"docx", name, bytes, items, def }
   let values = {};      // item id -> value
   let dirty = new Set(); // ids changed by the cadet or a preset; only these are written
@@ -43,16 +45,18 @@
       b.setAttribute("aria-checked", String(k === formKey));
       b.innerHTML = '<span class="dot" aria-hidden="true"></span><strong></strong>';
       b.querySelector("strong").textContent = F.name;
-      b.addEventListener("click", () => { formKey = k; renderFormChoices(); });
+      b.addEventListener("click", () => selectForm(k));
       box.appendChild(b);
     });
     const F = LIB[formKey];
     $("#formSource").textContent = F.source;
     const lf = $("#libraryFiles"); lf.innerHTML = "";
-    (F.files || []).forEach(f => {
+    // A package of several forms gets one button per form; a single form loads as soon as it is chosen.
+    if (F.files && F.files.length > 1) F.files.forEach((f, i) => {
       const b = document.createElement("button");
-      b.type = "button"; b.className = (F.files.length > 1 ? "btn ghost" : "btn primary"); b.textContent = f.label;
-      b.addEventListener("click", () => loadLibrary(f));
+      b.type = "button"; b.className = "btn ghost pkg-btn"; b.textContent = f.label;
+      b.setAttribute("aria-pressed", String(i === fileIdx));
+      b.addEventListener("click", () => { fileIdx = i; renderFormChoices(); loadLibrary(f); });
       lf.appendChild(b);
     });
     (F.links || []).forEach(l => {
@@ -60,11 +64,29 @@
       a.className = "btn ghost"; a.href = l.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label;
       lf.appendChild(a);
     });
-    $("#uploadHeading").textContent = F.files ? "2. Or upload your own copy" : "2. Upload the blank form";
+    $("#uploadHeading").textContent = F.files ? "Upload your own copy instead" : "Upload your form or template";
+    $("#uploadBox").open = !F.files;
     renderOconus(!!F.oconus);
     $("#formGuide").textContent = (current && current.def && current.def.output ? current.def.output + " " : "") +
       (F.guide || "Fill each blank. Blanks left empty stay as they are in the form.");
   }
+
+  function selectForm(k) {
+    if (k === formKey && current) return;
+    formKey = k; fileIdx = 0;
+    renderFormChoices();
+    const F = LIB[k];
+    if (F.files) loadLibrary(F.files[0]);
+    else {
+      loadToken++; current = null;
+      $("#fillFieldsWrap").hidden = true; status("");
+      window.FormPreview.message("Upload a fillable PDF to see it here. Word templates fill without a preview.");
+    }
+  }
+  // Open the first form the first time someone visits Fill a form.
+  document.querySelector('.doc-tab[data-doc="fill"]').addEventListener("click", () => {
+    if (!current && LIB[formKey].files) loadLibrary(LIB[formKey].files[fileIdx]);
+  });
 
   /* ---------- OCONUS steps ---------- */
   const OSTORE = "cadet-oconus-steps-v1";
@@ -102,23 +124,26 @@
   dz.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) load(f); });
 
   async function loadLibrary(f) {
-    status("Loading " + f.label.replace(/^\d+\.\s*/, "") + "...");
+    const my = ++loadToken;
+    status("Loading " + f.label.replace(/^\d+\.\s*/, "").replace(/^Load the /, "the ") + "...");
     try {
       const res = await fetch(f.url);
       if (!res.ok) throw new Error("the server answered " + res.status + ".");
-      await load({ name: f.name, arrayBuffer: () => res.arrayBuffer() }, { def: f.def, preset: f.preset });
+      if (my !== loadToken) return;
+      await load({ name: f.name, arrayBuffer: () => res.arrayBuffer() }, { def: f.def, preset: f.preset, token: my });
     } catch (err) { status("The site could not load the form: " + err.message + " Reload the page and try again."); }
   }
 
   async function load(file, opts = {}) {
+    const my = opts.token || ++loadToken;
     $("#fillFieldsWrap").hidden = true;
     values = {}; dirty = new Set();
     status("Reading " + file.name + "...");
     try {
       const bytes = await file.arrayBuffer();
       const ext = file.name.toLowerCase().split(".").pop();
-      let raw, kind;
-      if (ext === "pdf") ({ raw, kind } = await pdfFields(bytes));
+      let raw, kind, boxes = null;
+      if (ext === "pdf") ({ raw, kind, boxes } = await pdfFields(bytes));
       else if (ext === "docx") { raw = await docxFields(bytes); kind = "docx"; }
       else { status("Upload a .pdf or .docx file. Save other formats as one of these first."); return; }
       if (!raw.length) {
@@ -127,8 +152,13 @@
           : "This Word file has no marked blanks. Highlight each blank in yellow or type it in [square brackets], then upload it again.");
         return;
       }
+      if (my !== loadToken) return;
       const def = opts.def ? DEFS[opts.def] : detectDef(raw);
       current = { kind, name: file.name, bytes, def, items: buildItems(raw, def) };
+      if (kind === "acro" && boxes) window.FormPreview.show(bytes, boxes).then(() => { if (current && current.bytes === bytes) syncPreview(); });
+      else window.FormPreview.message(kind === "xfa"
+        ? "This form is an Adobe LiveCycle form, which only Adobe Acrobat and Reader can draw, so there is no preview. Every blank still fills."
+        : "Word templates fill without a preview. Your download keeps the template's layout.");
       prefill(raw, def, opts.preset);
       const n = current.items.filter(i => !i.group).length;
       status((def ? def.title : file.name) + ": " + n + (n === 1 ? " blank" : " blanks") + " to fill.");
@@ -165,9 +195,22 @@
   }
 
   /* ---------- Render the blanks ---------- */
+  // Keys each item writes to; a pick writes to one box per option.
+  const itemKeys = f => f.type === "pick" ? f.options.map(o => o.key) : (f.keys || []);
+  function previewValue(f) {
+    const v = values[f.id];
+    if (f.type === "pick") { f.options.forEach(o => window.FormPreview.setValue(o.key, o.label === v ? "X" : "")); return; }
+    const text = f.type === "check" ? (v ? "X" : "") : (v == null ? "" : String(v));
+    itemKeys(f).forEach(k => window.FormPreview.setValue(k, text));
+  }
+  function syncPreview() { if (current) current.items.forEach(f => { if (!f.group) previewValue(f); }); }
+
   function renderFields() {
     const box = $("#fillFields"); box.innerHTML = "";
     let rowBox = null, rowNum = null;
+    // The keys in each section, so focusing a blank can shade its whole section on the form.
+    const sectionKeys = []; let sec = [];
+    current.items.forEach(f => { if (f.group) { sec = []; } else { itemKeys(f).forEach(k => sec.push(k)); } f._sec = sec; });
     current.items.forEach((f, i) => {
       if (f.group) {
         const h = document.createElement("h4"); h.className = "field-group"; h.textContent = f.group;
@@ -209,11 +252,13 @@
         const today = f.type === "date" ? "short" : (!f.type && g.today);
         if (today) {
           const t = document.createElement("button"); t.type = "button"; t.className = "icon-btn"; t.textContent = "Insert today's date";
-          t.addEventListener("click", () => { input.value = today === "short" ? shortDate(now()) : longDate(now()); values[f.id] = input.value; dirty.add(f.id); });
+          t.addEventListener("click", () => { input.value = today === "short" ? shortDate(now()) : longDate(now()); values[f.id] = input.value; dirty.add(f.id); previewValue(f); });
           wrap.appendChild(t);
         }
       }
       input.id = id;
+      input.addEventListener("focus", () => window.FormPreview.focus(itemKeys(f), f._sec));
+      input.addEventListener(input.tagName === "SELECT" || input.type === "checkbox" ? "change" : "input", () => previewValue(f));
       const hintText = [f.hint !== undefined ? f.hint : g.hint, f.count > 1 ? "This blank appears " + f.count + " times. One entry fills all of them." : ""].filter(Boolean).join(" ");
       if (hintText) { const p = document.createElement("p"); p.className = "hint"; p.textContent = hintText; wrap.appendChild(p); }
       if (f.row) {
@@ -224,6 +269,7 @@
     renderFormChoices();
     $("#fillFieldsWrap").hidden = false;
     $("#fillDownloadStatus").textContent = "";
+    syncPreview();
   }
 
   /* ---------- PDF: standard fields and Adobe LiveCycle (XFA) data ---------- */
@@ -291,7 +337,21 @@
         else if (f instanceof P.PDFRadioGroup) raw.push({ key, label, type: "choice", options: f.getOptions(), value: f.getSelected() || "" });
         // Signature fields and buttons stay untouched so the form can still be signed.
       });
-      return { raw, kind: "acro" };
+      // Where each blank sits on the page, for the preview.
+      const boxes = new Map();
+      try {
+        const refPage = new Map();
+        pdf.getPages().forEach((pg, i) => { const a = pg.node.Annots(); if (a) for (let j = 0; j < a.size(); j++) refPage.set(String(a.get(j)), i); });
+        fields.forEach(f => f.acroField.getWidgets().forEach(w => {
+          const ref = pdf.context.getObjectRef(w.dict);
+          const page = ref ? refPage.get(String(ref)) : undefined;
+          if (page === undefined) return;
+          const r = w.getRectangle();
+          if (!boxes.has(f.getName())) boxes.set(f.getName(), []);
+          boxes.get(f.getName()).push({ page, rect: [r.x, r.y, r.x + r.width, r.y + r.height] });
+        }));
+      } catch (e) { /* no preview boxes */ }
+      return { raw, kind: "acro", boxes };
     }
     if (!ds) return { raw: [], kind: "acro" };
     const { out } = xfaLeaves(ds.text);
