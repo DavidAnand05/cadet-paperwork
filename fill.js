@@ -45,6 +45,14 @@
       b.setAttribute("aria-checked", String(k === formKey));
       b.innerHTML = '<span class="dot" aria-hidden="true"></span><strong></strong>';
       b.querySelector("strong").textContent = F.name;
+      if (F.disabled) {
+        // Shown but not selectable, with a note on when it will return.
+        b.setAttribute("aria-disabled", "true");
+        const d = document.createElement("span"); d.className = "desc"; d.textContent = F.note || "Not available yet.";
+        b.appendChild(d);
+        box.appendChild(b);
+        return;
+      }
       b.addEventListener("click", () => selectForm(k));
       box.appendChild(b);
     });

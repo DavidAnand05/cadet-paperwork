@@ -1,7 +1,7 @@
 """End-to-end smoke test for the Cadet Paperwork Builder.
 
 Serves the site locally, drives it in Chromium and WebKit (Safari's engine),
-and checks every download: memorandum, eSSS, Form 99, OCONUS checklist,
+and checks every download: memorandum, eSSS, Form 99, Form 10, Form 174, the feedback worksheet,
 an uploaded fillable PDF and an uploaded Word template.
 
 Setup:  pip install playwright pypdf && python -m playwright install chromium webkit
@@ -110,13 +110,13 @@ async def run(browser, out, label):
     n = sum(1 for v in PdfReader(p).get_fields().values() if v.get("/V") == "Test, Cadet A")
     check(n == 2, "Form 99 fills both copies")
 
-    # OCONUS checklist
-    await pg.click("#formChoices .choice >> nth=2")
-    await pg.click("#libraryFiles button >> nth=1")
-    await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('CW Foreign')")
-    await pg.fill("#fillFields input >> nth=0", "TCA")
-    p = await save(pg, "#fillDownload", out, "checklist.pdf")
-    check(PdfReader(p).get_fields()["Initial When CompletedRow1"].get("/V") == "TCA", "OCONUS checklist fills")
+    # OCONUS travel package is paused: shown grayed out with a note, and choosing it does nothing
+    before = await pg.inner_text("#fillStatus")
+    oc = pg.locator("#formChoices .choice:has-text('OCONUS')")
+    await oc.click(force=True); await pg.wait_for_timeout(300)
+    check(await oc.get_attribute("aria-disabled") == "true" and "future update" in await oc.inner_text()
+          and await oc.get_attribute("aria-checked") == "false" and await pg.inner_text("#fillStatus") == before,
+          "OCONUS travel package is grayed out with a future-update note")
 
     # Form 10, Report of Conduct
     await pg.click("#formChoices .choice:has-text('Form 10')")

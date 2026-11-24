@@ -341,6 +341,9 @@
     },
     oconus: {
       name: "OCONUS travel package",
+      // Paused: set to false to turn the package back on. Its forms, steps and eSSS preset stay in place.
+      disabled: true,
+      note: "Not available yet. The OCONUS travel package will return in a future update.",
       source: "Fill each form below in turn, then combine them with your certificates into one PDF Portfolio in Adobe Acrobat. Start at least 30 to 60 days before travel.",
       guide: "",
       oconus: true,
