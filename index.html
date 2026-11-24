@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadet Paperwork Builder</title>
+<meta name="description" content="Write Tongue and Quill memorandums and fill forms for USAFA cadet squadrons. Runs entirely in your browser.">
+<link rel="icon" href="assets/seal.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <h1>Cadet Paperwork Builder</h1>
+      <p>Write a memorandum or fill a form, check it against Tongue and Quill and download the finished document. Nothing you type leaves this page.</p>
+    </div>
+    <nav class="doc-tabs" aria-label="Paperwork type">
+      <button class="doc-tab" data-doc="mfr" aria-pressed="true">Write a memorandum</button>
+      <button class="doc-tab" data-doc="fill" aria-pressed="false">Fill a form</button>
+      <button class="doc-tab" data-doc="feedback" aria-pressed="false">Feedback</button>
+    </nav>
+  </div>
+</header>
+
+<main id="app">
+  <!-- MFR builder -->
+  <section id="doc-mfr" class="doc-view">
+    <div class="workspace">
+      <div class="form-col">
+        <ol class="stepper" aria-label="Steps">
+          <li><button data-step="0">Purpose</button></li>
+          <li><button data-step="1">Recipient</button></li>
+          <li><button data-step="2">You</button></li>
+          <li><button data-step="3">Content</button></li>
+          <li><button data-step="4">Review</button></li>
+        </ol>
+
+        <!-- Step 1: purpose -->
+        <div class="step" data-step="0">
+          <h2>What is this memorandum for?</h2>
+          <p class="lede">This sets the structure, the prompts for each paragraph and whether the approver gets a signature block.</p>
+          <div class="choice-grid" role="radiogroup" aria-label="Memorandum purpose" id="typeChoices"></div>
+          <div class="examples">
+            <h3>Start from an example</h3>
+            <p class="hint">Load a finished example to see what a correct memorandum looks like, then replace the details with your own. The names in the examples are fictional.</p>
+            <div class="btn-row" id="exampleButtons"></div>
+          </div>
+        </div>
+
+        <!-- Step 2: recipient -->
+        <div class="step" data-step="1" hidden>
+          <h2>Who is it going to?</h2>
+          <p class="lede">This fills the MEMORANDUM FOR line. For a request, it also adds an approve or disapprove block for that person.</p>
+          <div class="choice-grid compact" role="radiogroup" aria-label="Recipient" id="toChoices"></div>
+          <div class="field-row">
+            <label class="field wide">Office symbol on the MEMORANDUM FOR line
+              <input id="toSymbol" type="text" placeholder="CS-11/CC" autocomplete="off">
+            </label>
+          </div>
+          <fieldset class="approval" id="approvalBox">
+            <legend>
+              <label class="check"><input type="checkbox" id="approvalOn"> Add an approve or disapprove block</label>
+            </legend>
+            <p class="hint">Requests need one, so the approver has a clear decision to sign.</p>
+            <div class="field-row">
+              <label class="field">Approver first name<input id="apFirst" type="text" autocomplete="off"></label>
+              <label class="field narrow">MI<input id="apMi" type="text" maxlength="1" autocomplete="off"></label>
+              <label class="field">Last name<input id="apLast" type="text" autocomplete="off"></label>
+            </div>
+            <div class="field-row">
+              <label class="field narrow">Grade
+                <select id="apGrade">
+                  <option>2d Lt</option><option>1st Lt</option><option>Capt</option><option selected>Maj</option><option>Lt Col</option><option>Col</option><option>Brig Gen</option>
+                  <option>TSgt</option><option>MSgt</option><option>SMSgt</option><option>CMSgt</option><option>C1C</option>
+                </select>
+              </label>
+              <label class="field narrow">Service
+                <select id="apService"><option selected>USAF</option><option>USSF</option><option>USAFA</option></select>
+              </label>
+              <label class="field">Duty title<input id="apTitle" type="text" placeholder="Commander, CS-11" autocomplete="off"></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Step 3: you -->
+        <div class="step" data-step="2" hidden>
+          <h2>Who is it from?</h2>
+          <p class="lede">This fills the FROM line and your signature block.</p>
+          <div class="field-row">
+            <label class="field">First name<input id="meFirst" type="text" autocomplete="given-name"></label>
+            <label class="field narrow">MI<input id="meMi" type="text" maxlength="1"></label>
+            <label class="field">Last name<input id="meLast" type="text" autocomplete="family-name"></label>
+          </div>
+          <div class="field-row">
+            <label class="field narrow">Class
+              <select id="meCls"><option>C1C</option><option>C2C</option><option>C3C</option><option>C4C</option></select>
+            </label>
+            <label class="field narrow">Squadron
+              <input id="meSq" type="number" min="1" max="40" value="11" inputmode="numeric">
+            </label>
+            <label class="field">Duty title (second line of signature block)
+              <input id="meTitle" type="text" placeholder="Cadet, CS-11">
+            </label>
+          </div>
+          <fieldset class="patch">
+            <legend>Squadron patch in the letterhead</legend>
+            <label class="check"><input type="radio" name="patch" value="default" checked> <span id="patchDefaultLabel">CS-11 patch</span></label>
+            <label class="check"><input type="radio" name="patch" value="upload"> Upload my squadron's patch</label>
+            <label class="check"><input type="radio" name="patch" value="none"> No patch</label>
+            <input id="patchFile" type="file" accept="image/png,image/jpeg" hidden>
+            <p class="hint" id="patchHint"></p>
+          </fieldset>
+        </div>
+
+        <!-- Step 4: content -->
+        <div class="step" data-step="3" hidden>
+          <h2>What does it say?</h2>
+          <div class="field-row">
+            <label class="field">Date<input id="date" type="date"></label>
+          </div>
+          <label class="field wide">Subject
+            <input id="subject" type="text" autocomplete="off">
+          </label>
+          <p class="hint">Use title case and keep it short. The subject should tell the reader what the memorandum is about before reading it.</p>
+
+          <h3>References <span class="optional">optional</span></h3>
+          <p class="hint">List each regulation or document you cite. In the body, refer to them as Reference (a), (b) and so on.</p>
+          <div id="refList" class="list"></div>
+          <div class="chip-row" id="refChips" aria-label="Common references"></div>
+          <button class="btn ghost" id="addRef" type="button">Add a reference</button>
+
+          <h3>Paragraphs</h3>
+          <p class="hint">Lead with the bottom line. Each prompt is a suggestion for what that paragraph should cover; replace it with your own words.</p>
+          <div id="paraList" class="list"></div>
+          <div class="btn-row">
+            <button class="btn ghost" id="addPara" type="button">Add a paragraph</button>
+            <button class="btn ghost" id="addSub" type="button">Add a subparagraph</button>
+          </div>
+
+          <h3>Attachments <span class="optional">optional</span></h3>
+          <div id="attList" class="list"></div>
+          <button class="btn ghost" id="addAtt" type="button">Add an attachment</button>
+        </div>
+
+        <!-- Step 5: review -->
+        <div class="step" data-step="4" hidden>
+          <h2>Check it, then download</h2>
+          <ul id="checks" class="checks"></ul>
+          <div class="export">
+            <button class="btn primary" id="exportDocx" type="button">Download MFR (.docx)</button>
+            <p class="hint" id="exportStatus" role="status"></p>
+          </div>
+          <details class="howto">
+            <summary>How to sign it digitally</summary>
+            <ol>
+              <li>Open the .docx in Word and choose File, then Save As, then PDF.</li>
+              <li>Open the PDF in Adobe Acrobat or Reader and choose Tools, then Certificates, then Digitally Sign.</li>
+              <li>Drag a box above your name and sign with your CAC. Leave the space above the approver's name blank for them.</li>
+            </ol>
+          </details>
+          <button class="btn ghost danger" id="resetAll" type="button">Start a new memorandum</button>
+        </div>
+
+        <div class="step-nav">
+          <button class="btn ghost" id="prevStep" type="button">Back</button>
+          <button class="btn primary" id="nextStep" type="button">Next</button>
+        </div>
+      </div>
+
+      <aside class="preview-col" aria-label="Live preview">
+        <div class="preview-head">
+          <span>Live preview</span>
+          <span class="preview-note">Approximate. The download follows Tongue and Quill spacing exactly.</span>
+        </div>
+        <div class="paper-wrap">
+          <article class="paper" id="paper"></article>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Fill a form -->
+  <section id="doc-fill" class="doc-view" hidden>
+    <div class="fill-layout">
+      <div class="form-col">
+        <h2 class="view-title">Fill a form</h2>
+        <p class="lede">Upload a blank form or your own template. The site lists every blank, gives Tongue and Quill guidance for each one and downloads the completed form. The file never leaves your device.</p>
+
+        <h3>1. Choose the form</h3>
+        <div class="choice-grid compact" role="radiogroup" aria-label="Form" id="formChoices"></div>
+        <p class="hint" id="formSource"></p>
+        <div class="btn-row" id="libraryFiles"></div>
+        <div id="oconusGuide" class="oconus" hidden></div>
+
+        <h3 id="uploadHeading">2. Upload the blank form</h3>
+        <label class="dropzone" id="dropzone">
+          <input id="fillFile" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <strong>Choose a file</strong> or drag it here
+          <span class="hint">Fillable PDF (.pdf) or Word template (.docx)</span>
+        </label>
+        <details class="howto">
+          <summary>How to make your own Word template</summary>
+          <p>Mark each blank one of three ways. The site turns every marked blank into a field.</p>
+          <ul>
+            <li>Highlight the text in yellow, for example a highlighted <em>Firstname M. Lastname</em>.</li>
+            <li>Type the blank in square brackets: [Subject].</li>
+            <li>Type the blank in double braces: {{Date}}.</li>
+          </ul>
+          <p>Blanks with the same text fill together, so [Name] in three places needs to be typed only once.</p>
+        </details>
+        <p class="status" id="fillStatus" role="status"></p>
+
+        <div id="fillFieldsWrap" hidden>
+          <h3>3. Fill in the blanks</h3>
+          <p class="hint" id="formGuide"></p>
+          <div id="fillFields" class="fill-fields"></div>
+          <div class="export">
+            <button class="btn primary" id="fillDownload" type="button">Download completed form</button>
+            <p class="hint" id="fillDownloadStatus" role="status"></p>
+          </div>
+        </div>
+      </div>
+      <aside class="tips-col" aria-label="Tongue and Quill reminders">
+        <h3>Tongue and Quill reminders</h3>
+        <ul class="tips">
+          <li>Put the bottom line first. State the purpose or the action needed in the first sentence.</li>
+          <li>Use active voice and short sentences. Write "I request," not "It is requested."</li>
+          <li>Write dates as day, month and year: 23 November 2026.</li>
+          <li>Spell out an acronym the first time you use it, then use the acronym.</li>
+          <li>Use the correct grade abbreviation: C1C, Capt, Maj, Lt Col, MSgt.</li>
+          <li>Write signature block names in all capital letters: FIRSTNAME M. LASTNAME.</li>
+          <li>Proofread the finished form before you sign it.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Feedback -->
+  <section id="doc-feedback" class="doc-view" hidden>
+    <div class="form-col narrow-col">
+      <h2 class="view-title">Send feedback</h2>
+      <p class="lede">Report a problem, suggest an improvement or ask a question. Your message opens in your email or on GitHub, so you can review it before you send it.</p>
+      <div class="field-row">
+        <label class="field">Type
+          <select id="fbType"><option>Problem</option><option>Suggestion</option><option>Question</option></select>
+        </label>
+        <label class="field">Part of the site
+          <select id="fbArea"><option>Write a memorandum</option><option>Fill a form</option><option>Other</option></select>
+        </label>
+      </div>
+      <label class="field wide">Message
+        <textarea id="fbMessage" rows="6" placeholder="What happened, or what would make the site more useful?"></textarea>
+      </label>
+      <label class="field wide">Your name and squadron <span class="optional">optional</span>
+        <input id="fbName" type="text" autocomplete="name">
+      </label>
+      <p class="hint">Do not include CUI, other people's personal information or details of a disciplinary case.</p>
+      <div class="btn-row">
+        <button class="btn primary" id="fbEmail" type="button">Send by email</button>
+        <button class="btn ghost" id="fbGithub" type="button">Post on GitHub</button>
+      </div>
+      <p class="hint" id="fbStatus" role="status"></p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <p>Unofficial cadet tool, not endorsed by USAFA or the Department of the Air Force. Always check your document against DAFH 33-337, <em>The Tongue and Quill</em>, and your squadron's guidance. Do not enter CUI, PII beyond your own name, or classified information.</p>
+</footer>
+
+<script src="site-config.js"></script>
+<script src="assets/jszip.min.js"></script>
+<script src="assets/pdf-lib.min.js"></script>
+<script src="mfr-docx.js"></script>
+<script src="app.js"></script>
+<script src="examples.js"></script>
+<script src="forms-library.js"></script>
+<script src="fill.js"></script>
+<script src="feedback.js"></script>
+</body>
+</html>
