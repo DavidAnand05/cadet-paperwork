@@ -376,6 +376,9 @@
     }
     const form = pdf.getForm();
     try { if (form.hasXFA()) form.deleteXFA(); } catch (e) { /* not XFA */ }
+    const helv = await pdf.embedFont(P.StandardFonts.Helvetica);
+    let acroDA = "";
+    try { const d = pdf.catalog.getAcroForm().dict.lookup(P.PDFName.of("DA")); acroDA = d && d.decodeText ? d.decodeText() : ""; } catch (e) { /* none */ }
     current.items.forEach(it => {
       if (it.group || !dirty.has(it.id)) return;
       const v = values[it.id];
@@ -389,13 +392,62 @@
       it.keys.forEach(k => {
         try {
           const f = form.getField(k);
-          if (f instanceof P.PDFTextField) f.setText(winAnsiSafe(v));
+          if (f instanceof P.PDFTextField) {
+            const text = winAnsiSafe(v);
+            f.setText(text);
+            setSize(f, fitSize(f, text, helv, acroDA));
+          }
           else if (f instanceof P.PDFCheckBox) { v ? f.check() : f.uncheck(); }
           else if ((f instanceof P.PDFDropdown || f instanceof P.PDFOptionList || f instanceof P.PDFRadioGroup) && v) f.select(v);
         } catch (e) { console.warn("Could not fill " + k, e); }
       });
     });
     return new Blob([await pdf.save()], { type: "application/pdf" });
+  }
+
+  /* Text size. Many forms set "auto", which lets the PDF library pick the largest size that fits,
+     so a short answer in a big box comes out huge. Some forms store their size with escaped
+     characters (\057MyriadPro\055Regular 8\05600 Tf) that the library cannot read, which also
+     falls back to auto. Use the form's own size when it has one, otherwise the standard 10 point,
+     and shrink (to 6 point at the smallest) only when the answer would not fit its box. */
+  const unescape = t => String(t || "").replace(/\\([0-7]{3})/g, (m, o) => String.fromCharCode(parseInt(o, 8)));
+  function appearance(field, acroDA) {
+    let da = "";
+    try { da = field.acroField.getDefaultAppearance() || ""; } catch (e) { /* none */ }
+    if (!da) { try { const w = field.acroField.getWidgets()[0]; da = (w && w.getDefaultAppearance && w.getDefaultAppearance()) || ""; } catch (e) { /* none */ } }
+    return unescape(da || acroDA || "");
+  }
+  function setSize(field, size) {
+    if (!size) return;
+    const da = "/Helv " + size + " Tf 0 g";
+    field.acroField.setDefaultAppearance(da);
+    field.acroField.getWidgets().forEach(w => { try { w.setDefaultAppearance(da); } catch (e) { /* keep */ } });
+  }
+  function fitSize(field, text, font, acroDA) {
+    const m = /([\d.]+)\s+Tf/.exec(appearance(field, acroDA));
+    const own = m ? parseFloat(m[1]) : 0;
+    const start = own > 0 ? Math.min(own, 12) : 10;
+    const w = field.acroField.getWidgets()[0];
+    if (!w) return start;
+    const r = w.getRectangle();
+    const width = Math.max(10, r.width - 4), height = Math.max(6, r.height - 2);
+    const multi = field.isMultiline();
+    const lines = s => {
+      let n = 0;
+      String(text).split(/\r\n|\r|\n/).forEach(par => {
+        let line = 0; n++;
+        par.split(/(\s+)/).forEach(word => {
+          const ww = font.widthOfTextAtSize(word, s);
+          if (line + ww > width && line > 0 && word.trim()) { n++; line = font.widthOfTextAtSize(word, s); }
+          else line += ww;
+        });
+      });
+      return n;
+    };
+    for (let s = start; s > 6; s -= 0.5) {
+      if (multi ? lines(s) * s * 1.17 <= height : (font.widthOfTextAtSize(String(text), s) <= width && s * 1.1 <= height)) return s;
+    }
+    return 6;
   }
 
   /* ---------- Word ---------- */

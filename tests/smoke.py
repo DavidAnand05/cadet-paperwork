@@ -7,7 +7,7 @@ an uploaded fillable PDF and an uploaded Word template.
 Setup:  pip install playwright pypdf && python -m playwright install chromium webkit
 Run:    python tests/smoke.py
 """
-import asyncio, functools, http.server, os, sys, tempfile, threading, zipfile
+import asyncio, functools, http.server, os, re, sys, tempfile, threading, zipfile
 from playwright.async_api import async_playwright
 from pypdf import PdfReader
 
@@ -126,11 +126,21 @@ async def run(browser, out, label):
     await pg.wait_for_function("document.querySelectorAll('.fp-box.on').length === 1")
     await pg.get_by_label("1. Cadet name (Last, First, MI)").fill("Morgan, Taylor R")
     shown = await pg.inner_text(".fp-box.on")
-    painted = await pg.evaluate("(() => { const c = document.querySelector('.fp-page canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let dark = 0; for (let i = 0; i < d.length; i += 400) if (d[i] < 128) dark++; return dark; })()")
+    PAINT = "(() => { const c = document.querySelector('.fp-page canvas'); if (!c || !c.width) return 0; const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let dark = 0; for (let i = 0; i < d.length; i += 400) if (d[i] < 128) dark++; return dark; })()"
+    try: await pg.wait_for_function(PAINT + " > 50", timeout=15000)
+    except Exception: pass
+    painted = await pg.evaluate(PAINT)
     check(shown == "Morgan, Taylor R" and painted > 50, "form preview draws Form 10, outlines the blank and shows the answer")
     await pg.get_by_label("8. Reporting official memorandum attached").select_option("Yes")
     p = await save(pg, "#fillDownload", out, "f10.pdf")
     f = PdfReader(p).get_fields(); k = "topmostSubform[0].Page1[0]."
+    sizes = []
+    for a in PdfReader(p).pages[0].get("/Annots") or []:
+        a = a.get_object(); ap = a.get("/AP", {}).get("/N")
+        if a.get("/FT") == "/Tx" and ap is not None:
+            d = ap.get_object().get_data().decode("latin-1")
+            if re.search(r"<[0-9A-Fa-f]+>\s*Tj|\([^)]+\)\s*Tj", d): sizes += [float(x) for x in re.findall(r"([\d.]+) Tf", d)]   # boxes with text only
+    check(sizes and max(sizes) <= 10, "Form 10 text uses a standard size, not auto (largest %s pt)" % (max(sizes) if sizes else None))
     check(f[k + "TextField1[2]"].get("/V") == "Morgan, Taylor R" and f[k + "CheckBox1[0]"].get("/V") == "/1"
           and f[k + "CheckBox1[1]"].get("/V") in (None, "/Off"), "Form 10 fills name and Yes box")
 
