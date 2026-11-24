@@ -24,7 +24,8 @@
   $("#fbGithub").addEventListener("click", () => {
     const m = compose(); if (!m) return;
     const url = "https://github.com/" + cfg.repo + "/issues/new?title=" + encodeURIComponent(m.title) + "&body=" + encodeURIComponent(m.body);
-    window.open(url, "_blank", "noopener");
-    status.textContent = "GitHub opened in a new tab. Sign in, review the message and select Submit new issue.";
+    const link = document.getElementById("fbLink");
+    link.href = url; link.hidden = false;
+    status.textContent = "Select Open GitHub to post it. Sign in, review the message and select Submit new issue.";
   });
 })();

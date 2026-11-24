@@ -223,6 +223,8 @@ legend { font-weight: 600; padding: 0 6px; }
 .oconus .steps a { display: inline-block; margin: 2px 0 0 28px; font-size: 0.875rem; color: var(--link); font-weight: 600; }
 
 /* Feedback */
+.fb-link { display: inline-flex; align-items: center; text-decoration: none; margin-top: 10px; }
+.fb-link[hidden] { display: none; }
 .narrow-col { max-width: 720px; }
 
 .site-foot { max-width: 1240px; margin: 0 auto; padding: 0 24px 40px; color: var(--muted); font-size: 0.8125rem; }

@@ -122,9 +122,16 @@
   }
 
   async function exportDocx(state, templateUrl, patch) {
-    const res = await fetch(templateUrl);
-    if (!res.ok) throw new Error("The site could not load the letterhead template (" + res.status + ").");
-    const zip = await JSZip.loadAsync(await res.arrayBuffer());
+    // Load the letterhead template. Some hosts do not serve .docx files, so fall back
+    // to a base64 text copy of the same template.
+    let zip;
+    const res = await fetch(templateUrl).catch(() => null);
+    if (res && res.ok) zip = await JSZip.loadAsync(await res.arrayBuffer());
+    else {
+      const alt = await fetch(templateUrl + ".b64.txt").catch(() => null);
+      if (!alt || !alt.ok) throw new Error("The site could not load the letterhead template.");
+      zip = await JSZip.loadAsync((await alt.text()).trim(), { base64: true });
+    }
 
     // Body
     let doc = await zip.file("word/document.xml").async("string");

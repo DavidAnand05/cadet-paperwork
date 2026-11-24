@@ -448,10 +448,8 @@
       const blob = current.kind === "docx" ? await fillDocx() : await fillPdf();
       const ext = current.kind === "docx" ? "docx" : "pdf";
       const name = current.name.replace(/\.(pdf|docx)$/i, "") + "_completed." + ext;
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      const result = await window.saveFile(blob, name);
+      if (result === "declined") { out.textContent = "Download canceled."; return; }
       out.textContent = "Downloaded " + name + ". " + (current.def && current.def.output && /Acrobat/.test(current.def.output) ? "Open it in Adobe Acrobat or Reader, " : "Open it, ") + "proofread it and sign it.";
     } catch (err) {
       out.textContent = "The download failed: " + err.message + " Reload the page and try again.";

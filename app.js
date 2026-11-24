@@ -357,10 +357,8 @@
       const patch = { mode: S.patchMode === "default" ? (MFR.pad2(S.me.sq) === "11" ? "default" : "none") : S.patchMode };
       if (patch.mode === "upload") { if (patchUpload) Object.assign(patch, patchUpload); else patch.mode = "none"; }
       const { blob, name } = await MFR.exportDocx(S, "assets/mfr-template.docx", patch);
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      const result = await window.saveFile(blob, name);
+      if (result === "declined") { status.textContent = "Download canceled."; return; }
       status.textContent = "Downloaded " + name + ". Open it in Word to check it and sign it.";
     } catch (e) {
       status.textContent = "Download failed: " + e.message + " Reload the page and try again.";
