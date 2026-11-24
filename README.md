@@ -35,9 +35,16 @@ Everything runs in the browser. Nothing typed into the site is uploaded or store
 4. Under **Build and deployment**, set **Source** to *Deploy from a branch*, choose `main` and `/ (root)`, then save.
 5. After a minute or two the site is live at `https://<your-username>.github.io/cadet-paperwork/`.
 
+## Test
+
+```bash
+pip install playwright pypdf && python -m playwright install chromium webkit
+python tests/smoke.py
+```
+
 ## Change the letterhead
 
-Replace `assets/mfr-template.docx` with another Word file that has the letterhead you want. The site replaces everything in the body and keeps the header. The squadron number is swapped in automatically when the header contains the text ` 11`.
+Replace `assets/mfr-template.docx` with another Word file that has the letterhead you want. The site replaces everything in the body and keeps the header. The squadron number is swapped in automatically when the header contains the text ` 11`. After replacing it, regenerate the text copy: `base64 -w0 assets/mfr-template.docx > assets/mfr-template.docx.b64.txt`.
 
 ## Notes
 
