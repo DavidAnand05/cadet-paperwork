@@ -235,7 +235,7 @@
         const memo = units.some(u => /^MEMO(RANDUM)?\s+FOR\b/i.test(u.text.trim()));
         const format = checkMemo(units);
         // A format finding on a line (the date line, MEMO FOR) already covers the general date and "memo" rules there.
-        const covered = new Set(format.map(f => f.where));
+        const covered = new Set(format.filter(f => /memorandum date|MEMORANDUM FOR/.test(f.msg)).map(f => f.where));
         findings = format.concat(checkText(units, { memo }).filter(f =>
           !(covered.has(f.where) && /^Write dates|^Write "memorandum,"/.test(f.msg))));
         r.highlighted.forEach(h => findings.push({ lvl: "bad", msg: "Highlighted text is still in the document. Templates highlight what you must replace.", where: h.u.where, match: h.hl, context: ctx(h.u.text, Math.max(0, h.u.text.indexOf(h.hl)), h.hl.length), fix: "Replace the text and remove the highlight." }));
