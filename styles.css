@@ -115,7 +115,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 36px 24px 56px; }
 .choice[aria-checked="true"] .dot { border: 5px solid var(--primary); }
 .choice strong { font-weight: 600; color: var(--heading); }
 .choice .desc { color: var(--muted); font-size: 0.875rem; line-height: 1.45; }
-.choice[aria-disabled="true"] { cursor: not-allowed; background: transparent; border-style: dashed; border-color: var(--control); }
+.choice[aria-disabled="true"] { pointer-events: none; color: inherit; cursor: not-allowed; background: transparent; border-style: dashed; border-color: var(--control); }
 .choice[aria-disabled="true"]:hover { border-color: var(--control); }
 .choice[aria-disabled="true"] strong { color: var(--muted); }
 .choice[aria-disabled="true"] .dot { background: var(--line); border-color: var(--line); }

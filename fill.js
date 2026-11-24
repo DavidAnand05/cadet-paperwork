@@ -47,6 +47,7 @@
       b.querySelector("strong").textContent = F.name;
       if (F.disabled) {
         // Shown but not selectable, with a note on when it will return.
+        b.disabled = true;   // cannot be clicked, tabbed to or chosen with the keyboard
         b.setAttribute("aria-disabled", "true");
         const d = document.createElement("span"); d.className = "desc"; d.textContent = F.note || "Not available yet.";
         b.appendChild(d);

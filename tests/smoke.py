@@ -114,7 +114,8 @@ async def run(browser, out, label):
     before = await pg.inner_text("#fillStatus")
     oc = pg.locator("#formChoices .choice:has-text('OCONUS')")
     await oc.click(force=True); await pg.wait_for_timeout(300)
-    check(await oc.get_attribute("aria-disabled") == "true" and "future update" in await oc.inner_text()
+    await oc.dispatch_event("click"); await pg.wait_for_timeout(300)
+    check(await oc.is_disabled() and await oc.get_attribute("aria-disabled") == "true" and "future update" in await oc.inner_text()
           and await oc.get_attribute("aria-checked") == "false" and await pg.inner_text("#fillStatus") == before,
           "OCONUS travel package is grayed out with a future-update note")
 
