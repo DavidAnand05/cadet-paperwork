@@ -198,7 +198,7 @@
     input.addEventListener("input", () => { onInput(input.value); save(); renderPreview(); });
     const tools = document.createElement("div"); tools.className = "tools";
     const mk = (label, fn, aria) => { if (!fn) return; const b = document.createElement("button"); b.type = "button"; b.className = "icon-btn"; b.textContent = label; b.setAttribute("aria-label", aria); b.addEventListener("click", fn); tools.appendChild(b); };
-    mk("Up", onUp, "Move up"); mk("Down", onDown, "Move down"); mk("Remove", onRemove, "Remove");
+    mk("Move up", onUp, "Move up"); mk("Move down", onDown, "Move down"); mk("Remove", onRemove, "Remove");
     row.append(t, input, tools);
     return row;
   }
@@ -329,6 +329,8 @@
       if (k === S.step) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
       b.classList.toggle("done", k < S.step);
     });
+    const names = ["Purpose", "Recipient", "You", "Content", "Review"];
+    $("#stepCount").textContent = "Step " + (S.step + 1) + " of " + STEPS + ": " + names[S.step];
     $("#prevStep").style.visibility = S.step === 0 ? "hidden" : "visible";
     $("#nextStep").hidden = S.step === STEPS - 1;
     if (S.step === 4) renderChecks();
@@ -336,6 +338,16 @@
   $$(".stepper button").forEach(b => b.addEventListener("click", () => goStep(Number(b.dataset.step))));
   $("#prevStep").addEventListener("click", () => { goStep(S.step - 1); $(".form-col").scrollIntoView({ block: "start" }); });
   $("#nextStep").addEventListener("click", () => { goStep(S.step + 1); $(".form-col").scrollIntoView({ block: "start" }); });
+
+  /* ---------- Phone preview sheet ---------- */
+  function setPreview(open) {
+    document.body.classList.toggle("preview-open", open);
+    $("#previewOpen").setAttribute("aria-expanded", String(open));
+    if (open) $("#previewClose").focus(); else $("#previewOpen").focus();
+  }
+  $("#previewOpen").addEventListener("click", () => setPreview(true));
+  $("#previewClose").addEventListener("click", () => setPreview(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("preview-open")) setPreview(false); });
 
   /* ---------- Export ---------- */
   $("#exportDocx").addEventListener("click", async () => {

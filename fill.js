@@ -51,7 +51,7 @@
     const lf = $("#libraryFiles"); lf.innerHTML = "";
     (F.files || []).forEach(f => {
       const b = document.createElement("button");
-      b.type = "button"; b.className = "btn primary"; b.textContent = f.label;
+      b.type = "button"; b.className = (F.files.length > 1 ? "btn ghost" : "btn primary"); b.textContent = f.label;
       b.addEventListener("click", () => loadLibrary(f));
       lf.appendChild(b);
     });

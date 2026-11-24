@@ -13,10 +13,10 @@
   <div class="masthead-inner">
     <div class="brand">
       <h1>Cadet Paperwork Builder</h1>
-      <p>Write a memorandum or fill a form, check it against Tongue and Quill and download the finished document. Nothing you type leaves this page.</p>
+      <p>Write Tongue and Quill memorandums and fill cadet forms. Nothing you type leaves your device.</p>
     </div>
     <nav class="doc-tabs" aria-label="Paperwork type">
-      <button class="doc-tab" data-doc="mfr" aria-pressed="true">Write a memorandum</button>
+      <button class="doc-tab" data-doc="mfr" aria-pressed="true"><span class="wide-only">Write a </span>memorandum</button>
       <button class="doc-tab" data-doc="fill" aria-pressed="false">Fill a form</button>
       <button class="doc-tab" data-doc="feedback" aria-pressed="false">Feedback</button>
     </nav>
@@ -28,6 +28,7 @@
   <section id="doc-mfr" class="doc-view">
     <div class="workspace">
       <div class="form-col">
+        <p class="step-count" id="stepCount" aria-live="polite"></p>
         <ol class="stepper" aria-label="Steps">
           <li><button data-step="0">Purpose</button></li>
           <li><button data-step="1">Recipient</button></li>
@@ -168,9 +169,11 @@
         </div>
       </div>
 
-      <aside class="preview-col" aria-label="Live preview">
+      <button class="btn primary preview-open" id="previewOpen" type="button">Show preview</button>
+      <aside class="preview-col" aria-label="Live preview" id="previewCol">
         <div class="preview-head">
           <span>Live preview</span>
+          <button class="btn ghost preview-close" id="previewClose" type="button">Close preview</button>
           <span class="preview-note">Approximate. The download follows Tongue and Quill spacing exactly.</span>
         </div>
         <div class="paper-wrap">
