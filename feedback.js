@@ -17,7 +17,7 @@
   }
   $("#fbEmail").addEventListener("click", () => {
     const m = compose(); if (!m) return;
-    location.href = "mailto:" + encodeURIComponent(cfg.feedbackEmail) +
+    location.href = "mailto:" + cfg.feedbackEmail +
       "?subject=" + encodeURIComponent("Cadet Paperwork Builder " + m.title) + "&body=" + encodeURIComponent(m.body);
     status.textContent = "Your email app opened with the message. Review it and select Send.";
   });

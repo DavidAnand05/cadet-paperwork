@@ -66,6 +66,12 @@ async def run(browser, out, label):
     with zipfile.ZipFile(p) as z:
         doc = z.read("word/document.xml").decode()
     check("MEMORANDUM FOR" in doc and "APPROVED / DISAPPROVED" in doc, "memorandum exports with approval block")
+    check(not await pg.is_visible("#nextStep"), "Next button is hidden on the last step")
+    p = await save(pg, "#exportPdf", out, "memo.pdf")
+    r = PdfReader(p); text = "".join(pg_.extract_text() for pg_ in r.pages)
+    sigs = [k for k, v in (r.get_fields() or {}).items() if v.get("/FT") == "/Sig"]
+    check(len(r.pages) == 1 and "MEMORANDUM FOR" in text and "DEPARTMENT OF THE AIR FORCE" in text and "TAYLOR R. MORGAN, C1C, USAFA" in text
+          and len(sigs) == 2, "PDF has letterhead, text and author and approver signature fields (%d pages, %d fields)" % (len(r.pages), len(sigs)))
 
     # Character letter follows the owner's template
     await pg.click('.stepper button[data-step="0"]')
@@ -169,6 +175,10 @@ async def run(browser, out, label):
             "plain words", "passive voice", "capital letters", "number of attachments", "Number the paragraphs"]
     missing = [w for w in want if w.lower() not in txt.lower()]
     check(not missing, "checker catches each problem in a flawed memorandum" + (": missing " + ", ".join(missing) if missing else ""))
+
+    # Feedback email
+    await pg.click(".doc-tab[data-doc=feedback]")
+    check(await pg.is_visible("#fbEmail") and "c27david.anand@afacademy.af.edu" in await pg.evaluate("window.SITE.feedbackEmail"), "feedback email button is set")
 
     # Theme override survives reload
     await pg.select_option("#themeSelect", "dark"); await pg.reload()

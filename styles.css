@@ -58,6 +58,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--sky); color: var(--ink); font: 400 16px/1.55 var(--ui); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, h4 { line-height: 1.2; margin: 0; }
@@ -180,6 +181,7 @@ legend { font-weight: 600; padding: 0 6px; color: var(--heading); }
 :root[data-theme="dark"] .finding-fix { color: var(--link); }
 #checkSummary { font-family: var(--display); font-size: 1.375rem; font-weight: 600; margin: 28px 0 14px; }
 .export { margin: 8px 0 16px; }
+.export .btn.ghost { margin-top: 0; }
 .howto { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 16px; }
 .howto summary { cursor: pointer; font-weight: 600; color: var(--heading); min-height: 32px; }
 .howto ul, .howto ol { padding-left: 20px; }

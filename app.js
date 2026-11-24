@@ -364,20 +364,24 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("preview-open")) setPreview(false); });
 
   /* ---------- Export ---------- */
-  $("#exportDocx").addEventListener("click", async () => {
+  async function exportAs(kind) {
     const status = $("#exportStatus");
     status.textContent = "Building your memorandum...";
     try {
       const patch = { mode: S.patchMode === "default" ? (MFR.pad2(S.me.sq) === "11" ? "default" : "none") : S.patchMode };
       if (patch.mode === "upload") { if (patchUpload) Object.assign(patch, patchUpload); else patch.mode = "none"; }
-      const { blob, name } = await MFR.exportDocx(S, "assets/mfr-template.docx", patch);
-      const result = await window.saveFile(blob, name);
+      const out = kind === "pdf" ? await MFR.exportPdf(S, patch) : await MFR.exportDocx(S, "assets/mfr-template.docx", patch);
+      const result = await window.saveFile(out.blob, out.name);
       if (result === "declined") { status.textContent = "Download canceled."; return; }
-      status.textContent = "Downloaded " + name + ". Open it in Word to check it and sign it.";
+      status.textContent = kind === "pdf"
+        ? "Downloaded " + out.name + ". Open it in Adobe Acrobat or Reader, proofread it and select the signature box above your name to sign."
+        : "Downloaded " + out.name + ". Open it in Word to check it, then save it as a PDF and sign it.";
     } catch (e) {
       status.textContent = "Download failed: " + e.message + " Reload the page and try again.";
     }
-  });
+  }
+  $("#exportPdf").addEventListener("click", () => exportAs("pdf"));
+  $("#exportDocx").addEventListener("click", () => exportAs("docx"));
   $("#resetAll").addEventListener("click", () => {
     if (!confirmReset()) return;
     S = freshState(); patchUpload = null; save(); renderAll(); goStep(0);

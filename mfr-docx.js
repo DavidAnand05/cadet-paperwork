@@ -171,5 +171,155 @@
     return { blob, name };
   }
 
-  window.MFR = { buildBlocks, exportDocx, longDate, sqSymbol, pad2, personName };
+  /* ---------- PDF export with digital signature fields ----------
+     Mirrors the letterhead template: Letter size, 1-inch margins, Times 12 point,
+     signature block 4.5 inches from the left edge, page numbers top right from page 2. */
+  const PT = 72, PAGE_W = 8.5 * PT, PAGE_H = 11 * PT, MARGIN = PT, BODY_W = PAGE_W - 2 * MARGIN;
+  const SIZE = 12, LEAD = 13.8;
+  const INDENT = {   // [first-line x offset, wrapped-line x offset], in points from the left margin
+    plain: [0, 0], right: [0, 0], from: [0, 43.2], subject: [0, 59.75], refcont: [54, 54], sub: [18, 0], sig: [252, 252]
+  };
+  const pdfSafe = t => String(t)
+    .replace(/(^|[\s(\[{])"/g, "$1“").replace(/"/g, "”").replace(/(^|[\s(\[{])'/g, "$1‘").replace(/'/g, "’")
+    .replace(/[‐-‒]/g, "-").replace(/[^\x20-\x7E\xA0-\xFF–—‘’“”•…€]/g, "");
+
+  // Break one block into rows of words that fit the line. Each word keeps its placeholder flag.
+  function wrapBlock(b, font) {
+    const [first, rest] = INDENT[b.t] || [0, 0];
+    const words = [];
+    b.segs.forEach(s => {
+      pdfSafe(s.text).split(/( +)/).forEach(w => { if (w) words.push({ text: w, ph: !!s.ph }); });
+    });
+    const rows = []; let row = [], width = 0, max = BODY_W - first;
+    const push = () => { rows.push({ t: b.t, words: row }); row = []; width = 0; max = BODY_W - rest; };
+    words.forEach(w => {
+      const ww = font.widthOfTextAtSize(w.text, SIZE);
+      if (/^ +$/.test(w.text)) { if (row.length) { row.push(w); width += ww; } return; }
+      if (row.length && width + ww > max) {
+        while (row.length && /^ +$/.test(row[row.length - 1].text)) row.pop();
+        push();
+      }
+      row.push(w); width += ww;
+    });
+    if (row.length || !rows.length) push();
+    rows.forEach((r, i) => { r.x = i === 0 ? first : rest; });
+    return rows;
+  }
+
+  async function fetchBytes(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("The site could not load " + url + ".");
+    return r.arrayBuffer();
+  }
+
+  async function exportPdf(state, patch) {
+    const P = window.PDFLib;
+    const pdf = await P.PDFDocument.create();
+    const times = await pdf.embedFont(P.StandardFonts.TimesRoman);
+    const head = await pdf.embedFont(P.StandardFonts.HelveticaBold);
+    const blue = P.rgb(0, 0, 0.6), black = P.rgb(0, 0, 0), yellow = P.rgb(1, 0.95, 0.69);
+
+    // Lay out every row, remembering where each signature block starts.
+    const blocks = buildBlocks(state);
+    const rows = [];
+    blocks.forEach(b => {
+      if (b.t === "blank") rows.push({ t: "blank", words: [] });
+      else wrapBlock(b, times).forEach((r, i) => { r.first = i === 0; rows.push(r); });
+    });
+    const sigStarts = [];
+    rows.forEach((r, i) => { if (r.t === "sig" && r.first && (i === 0 || rows[i - 1].t !== "sig")) sigStarts.push(i); });
+
+    // Keep each signature block on the same page as at least two lines of text above it.
+    const keepFrom = {};
+    sigStarts.forEach(s => {
+      let i = s, text = 0;
+      while (i > 0 && text < 2) { i--; if (rows[i].t !== "blank") text++; }
+      let e = s; while (e + 1 < rows.length && rows[e + 1].t === "sig") e++;
+      keepFrom[i] = e;
+    });
+
+    // Letterhead images
+    const seal = await pdf.embedPng(await fetchBytes("assets/seal.png"));
+    let patchImg = null;
+    if (patch.mode === "default") patchImg = await pdf.embedJpg(await fetchBytes("assets/cs11-patch.jpg"));
+    else if (patch.mode === "upload" && patch.bytes) patchImg = patch.type === "image/png" ? await pdf.embedPng(patch.bytes) : await pdf.embedJpg(patch.bytes);
+
+    const pages = [];
+    let page = null, y = 0;
+    const newPage = () => {
+      page = pdf.addPage([PAGE_W, PAGE_H]); pages.push(page);
+      if (pages.length === 1) {
+        // Letterhead: seal at the left margin, patch at the right margin, four centered lines.
+        const top = PAGE_H - 0.5 * PT;
+        page.drawImage(seal, { x: MARGIN, y: top - 15 - PT, width: PT, height: PT });
+        if (patchImg) {
+          const h = PT * 1.07, w = h * patchImg.width / patchImg.height;
+          page.drawImage(patchImg, { x: PAGE_W - MARGIN - w, y: top - 13.5 - h, width: w, height: h });
+        }
+        const lines = [["DEPARTMENT OF THE AIR FORCE", 12], ["UNITED STATES AIR FORCE ACADEMY", 12], ["AIR FORCE CADET WING", 10.5], ["CADET SQUADRON " + pad2(state.me.sq), 10.5]];
+        let ly = top - 12;
+        lines.forEach(([t, s]) => {
+          page.drawText(t, { x: (PAGE_W - head.widthOfTextAtSize(t, s)) / 2, y: ly, size: s, font: head, color: blue });
+          ly -= s + 3;
+        });
+        y = top - 15 - PT - 0.35 * PT;
+      } else {
+        const n = String(pages.length);
+        page.drawText(n, { x: PAGE_W - MARGIN - times.widthOfTextAtSize(n, SIZE), y: PAGE_H - 0.5 * PT - SIZE, size: SIZE, font: times, color: black });
+        y = PAGE_H - MARGIN;
+      }
+    };
+    newPage();
+
+    const sigFields = [];
+    const bottom = MARGIN;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (keepFrom[i] !== undefined && y - (keepFrom[i] - i + 1) * LEAD < bottom) newPage();
+      if (y - LEAD < bottom) { newPage(); if (r.t === "blank") continue; }
+      y -= LEAD;
+      if (sigStarts.includes(i)) {
+        // A digital signature field over the blank lines above the name: sign it in Adobe Acrobat or Reader with a CAC.
+        const sx = MARGIN + INDENT.sig[0];
+        const lines = sigFields.length === 0 ? 4 : 3;
+        sigFields.push({ page, rect: [sx, y + SIZE, sx + 3 * PT, y + SIZE + (lines - 0.6) * LEAD] });
+      }
+      if (r.t === "blank" || !r.words.length) continue;
+      const lineW = r.words.reduce((a, w) => a + times.widthOfTextAtSize(w.text, SIZE), 0);
+      let x = r.t === "right" ? PAGE_W - MARGIN - lineW : MARGIN + r.x;
+      const base = y + 3;
+      // Draw each run of plain or placeholder words as one string, so the PDF text copies cleanly.
+      const runs = [];
+      r.words.forEach(w => { const last = runs[runs.length - 1]; if (last && last.ph === w.ph) last.text += w.text; else runs.push({ text: w.text, ph: w.ph }); });
+      runs.forEach(w => {
+        const ww = times.widthOfTextAtSize(w.text, SIZE);
+        if (w.ph) page.drawRectangle({ x, y: base - 3, width: ww, height: LEAD - 1, color: yellow });
+        page.drawText(w.text, { x, y: base, size: SIZE, font: times, color: black });
+        x += ww;
+      });
+    }
+
+    // Signature fields
+    const acro = pdf.catalog.getOrCreateAcroForm();
+    sigFields.forEach((f, i) => {
+      const dict = pdf.context.obj({
+        Type: "Annot", Subtype: "Widget", FT: "Sig", F: 4,
+        T: P.PDFString.of(i === 0 ? "Signature of author" : "Signature of approver"),
+        TU: P.PDFString.of(i === 0 ? "Sign here with your Common Access Card" : "Approver signs here"),
+        Rect: f.rect, P: f.page.ref
+      });
+      const ref = pdf.context.register(dict);
+      f.page.node.addAnnot(ref);
+      acro.addField(ref);
+    });
+
+    pdf.setTitle(state.subject || "Memorandum");
+    pdf.setProducer("Cadet Paperwork Builder"); pdf.setCreator("Cadet Paperwork Builder");
+    const bytes = await pdf.save();
+    const last = (state.me.last || "LastName").replace(/[^A-Za-z-]/g, "");
+    const name = sqSymbol(state.me.sq).replace("-", "") + "_MFR_" + last + "_" + (shortDate(state.date) || "DDMONYYYY") + ".pdf";
+    return { blob: new Blob([bytes], { type: "application/pdf" }), name, signatures: sigFields.length };
+  }
+
+  window.MFR = { buildBlocks, exportDocx, exportPdf, longDate, sqSymbol, pad2, personName };
 })();

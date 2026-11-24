@@ -169,15 +169,19 @@
           <h2>Check it, then download</h2>
           <ul id="checks" class="checks"></ul>
           <div class="export">
-            <button class="btn primary" id="exportDocx" type="button">Download memorandum (.docx)</button>
+            <div class="btn-row">
+              <button class="btn primary" id="exportPdf" type="button">Download PDF, ready to sign</button>
+              <button class="btn ghost" id="exportDocx" type="button">Download Word (.docx)</button>
+            </div>
+            <p class="hint">The PDF has a digital signature box above your signature block, and above the approver's if you added an approve or disapprove block. Use the Word file if you still need to edit it.</p>
             <p class="hint" id="exportStatus" role="status"></p>
           </div>
           <details class="howto">
             <summary>How to sign it digitally</summary>
             <ol>
-              <li>Open the .docx in Word and choose File, then Save As, then PDF.</li>
-              <li>Open the PDF in Adobe Acrobat or Reader and choose Tools, then Certificates, then Digitally Sign.</li>
-              <li>Drag a box above your name and sign with your Common Access Card (CAC). Leave the space above the approver's name blank for them.</li>
+              <li>Download the PDF, or open the Word file and save it as a PDF.</li>
+              <li>Open the PDF in Adobe Acrobat or Reader. In the downloaded PDF, select the signature box above your name; in a PDF saved from Word, choose Tools, then Certificates, then Digitally Sign, and drag a box above your name.</li>
+              <li>Sign with your Common Access Card (CAC). Leave the approver's box for the approver.</li>
             </ol>
           </details>
           <button class="btn ghost danger" id="resetAll" type="button">Start a new memorandum</button>
@@ -303,7 +307,7 @@
           <select id="fbType"><option>Problem</option><option>Suggestion</option><option>Question</option></select>
         </label>
         <label class="field">Part of the site
-          <select id="fbArea"><option>Write a memorandum</option><option>Fill a form</option><option>Other</option></select>
+          <select id="fbArea"><option>Write a memorandum</option><option>Fill a form</option><option>Check paperwork</option><option>Other</option></select>
         </label>
       </div>
       <label class="field wide">Message
