@@ -469,5 +469,8 @@
     }
   });
 
+  // Shared with the paperwork checker.
+  window.FillKit = { pdfFields, detectDef, buildItems };
+
   renderFormChoices();
 })();

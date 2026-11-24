@@ -36,7 +36,8 @@
     </div>
     <nav class="doc-tabs" aria-label="Paperwork type">
       <button class="doc-tab" data-doc="mfr" aria-pressed="true"><span class="wide-only">Write a memorandum</span><span class="narrow-only">Memorandum</span></button>
-      <button class="doc-tab" data-doc="fill" aria-pressed="false">Fill a form</button>
+      <button class="doc-tab" data-doc="fill" aria-pressed="false"><span class="wide-only">Fill a form</span><span class="narrow-only">Fill</span></button>
+      <button class="doc-tab" data-doc="check" aria-pressed="false"><span class="wide-only">Check paperwork</span><span class="narrow-only">Check</span></button>
       <button class="doc-tab" data-doc="feedback" aria-pressed="false">Feedback</button>
     </nav>
   </div>
@@ -259,6 +260,40 @@
   </section>
 
   <!-- Feedback -->
+  <!-- Check paperwork -->
+  <section id="doc-check" class="doc-view" hidden>
+    <div class="fill-layout">
+      <div class="form-col">
+        <h2 class="view-title">Check paperwork</h2>
+        <p class="lede">Upload a memorandum or a filled form. The site checks it against Tongue and Quill and lists corrections and suggestions. The file never leaves your device.</p>
+        <label class="dropzone" id="checkDrop">
+          <input id="checkFile" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <strong>Choose a file</strong>
+          <span>or drag it here</span>
+          <span class="hint">Word memorandum (.docx) or fillable PDF form (.pdf)</span>
+        </label>
+        <p class="hint" id="checkStatus" aria-live="polite"></p>
+        <div id="checkResults" hidden>
+          <h3 id="checkSummary"></h3>
+          <ul class="checks findings" id="checkList"></ul>
+          <div class="btn-row">
+            <button class="btn ghost" id="checkCopy" type="button">Copy the list</button>
+            <span class="hint" id="checkCopyStatus" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+      <aside class="tips-col" aria-label="What the checker looks for">
+        <h3>What the checker looks for</h3>
+        <ul class="tips">
+          <li><strong>Corrections:</strong> template placeholders, contractions, "memo," dates not written as day, month and year, and memorandum format errors such as paragraph numbering, the subject line and the signature block.</li>
+          <li><strong>Suggestions:</strong> passive voice, long sentences, wordy phrases and acronyms that are not spelled out on first use.</li>
+          <li>The checker reads Word files and fillable PDFs. It cannot read scanned pages.</li>
+          <li>It catches common problems. It does not replace a careful proofread or your squadron's guidance.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
   <section id="doc-feedback" class="doc-view" hidden>
     <div class="form-col narrow-col">
       <h2 class="view-title">Send feedback</h2>
@@ -301,6 +336,7 @@
 <script src="examples.js"></script>
 <script src="forms-library.js"></script>
 <script src="fill.js"></script>
+<script src="checker.js"></script>
 <script src="feedback.js"></script>
 <script src="theme.js"></script>
 </body>

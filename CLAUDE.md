@@ -25,13 +25,14 @@ A free, public, unofficial website that helps U.S. Air Force Academy cadets writ
 
 | File | Purpose |
 |---|---|
-| `index.html` | The page: three tabs (Write a memorandum, Fill a form, Feedback). An inline head script sets `data-theme` before the page draws. |
+| `index.html` | The page: four tabs (Write a memorandum, Fill a form, Check paperwork, Feedback). An inline head script sets `data-theme` before the page draws. |
 | `styles.css` | All styles. Design tokens at the top, with a dark theme on `:root[data-theme="dark"]`. U.S. Web Design System conventions. |
 | `app.js` | Memorandum builder: 5 steps (Purpose, Recipient, You, Content, Review), state in localStorage (`cadet-mfr-builder-v1`), review checks, export, phone preview sheet. Exposes `window.MFRApp`. |
 | `mfr-docx.js` | `MFR.buildBlocks(state)` builds the memorandum as neutral lines, used by both the live preview and the .docx export. `MFR.exportDocx` writes those lines into the letterhead template. |
 | `examples.js` | Four finished example memorandums written to T&Q. |
 | `fill.js` | Fill a form: reads standard PDF fields, Adobe LiveCycle (XFA) data and Word templates; renders the fields; writes them back. |
 | `forms-library.js` | Built-in form definitions (`FORM_DEFS`), the forms list (`FORM_LIBRARY`), eSSS presets and the OCONUS steps. |
+| `checker.js` | Check paperwork tab: reads an uploaded .docx (paragraphs, highlights) or fillable PDF (field values, via `window.FillKit` from `fill.js`) and lists Tongue and Quill corrections and suggestions. Rule-based, in the browser. The smoke test requires the site's own exported examples to produce 0 corrections. |
 | `feedback.js`, `site-config.js` | Feedback sends a prefilled GitHub issue (repo set in `site-config.js`). Set `feedbackEmail` there to show an email button. |
 | `download.js` | `window.saveFile(blob, name)`: a normal browser download, or the host's save dialog inside a claude.ai preview. |
 | `theme.js` | Auto, Light and Dark switch; Auto follows the device live. Saved as `cadet-theme`. |

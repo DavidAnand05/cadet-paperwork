@@ -32,6 +32,16 @@ async def save(pg, sel, out, name):
     await f.save_as(path)
     return path
 
+def make_docx(path, paras):
+    """A minimal Word file with one paragraph per string."""
+    from xml.sax.saxutils import escape
+    body = "".join('<w:p><w:r><w:t xml:space="preserve">%s</w:t></w:r></w:p>' % escape(t) for t in paras)
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+        z.writestr("_rels/.rels", '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+        z.writestr("word/document.xml", '<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>%s</w:body></w:document>' % body)
+    return path
+
 def xfa_datasets(path):
     x = PdfReader(path).trailer["/Root"]["/AcroForm"]["/XFA"]
     return [x[i + 1].get_object().get_data() for i in range(0, len(x), 2) if x[i] == "datasets"][0].decode()
@@ -140,6 +150,25 @@ async def run(browser, out, label):
     p = await save(pg, "#fillDownload", out, "template.docx")
     with zipfile.ZipFile(p) as z:
         check("CS-11/CC" in z.read("word/document.xml").decode(), "Word template fills")
+
+    # Paperwork checker: the site's own examples pass, a flawed memorandum is caught
+    await pg.click(".doc-tab[data-doc=check]")
+    for name in ("memo.docx", "character.docx"):
+        await pg.set_input_files("#checkFile", os.path.join(out, name))
+        await pg.wait_for_function("document.querySelector('#checkSummary').textContent.startsWith(%r)" % name)
+        summary = await pg.inner_text("#checkSummary")
+        check(" 0 corrections" in summary or "no problems" in summary, "checker finds no corrections in " + name + " (" + summary + ")")
+    bad = make_docx(os.path.join(out, "flawed.docx"), [
+        "11/23/2026", "MEMO FOR CS-11/CC", "FROM:  CS-11/C1C Test", "SUBJECT:  request for a pass",
+        "I can't attend the memo brief in order to study for [Subject].", "The form was submitted late by the cadet.",
+        "taylor r. morgan, C1C, USAFA", "Cadet, CS-11", "Attachments:", "1. One", "2. Two"])
+    await pg.set_input_files("#checkFile", bad)
+    await pg.wait_for_function("document.querySelector('#checkSummary').textContent.startsWith('flawed')")
+    txt = await pg.inner_text("#checkList")
+    want = ["MEMORANDUM FOR in full", "day, month and year", "title case", "contractions", "not \"memo", "placeholder",
+            "plain words", "passive voice", "capital letters", "number of attachments", "Number the paragraphs"]
+    missing = [w for w in want if w.lower() not in txt.lower()]
+    check(not missing, "checker catches each problem in a flawed memorandum" + (": missing " + ", ".join(missing) if missing else ""))
 
     # Theme override survives reload
     await pg.select_option("#themeSelect", "dark"); await pg.reload()

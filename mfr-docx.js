@@ -77,7 +77,7 @@
     const atts = s.atts.map(a => a.trim()).filter(Boolean);
     if (atts.length) {
       blank(); blank();
-      line("plain", { text: atts.length > 1 ? "Attachments:" : "Attachment:" });
+      line("plain", { text: atts.length > 1 ? atts.length + " Attachments:" : "Attachment:" });
       atts.forEach((a, i) => line("plain", { text: (atts.length > 1 ? (i + 1) + ".  " : "") + a }));
     }
 

@@ -156,6 +156,13 @@ legend { font-weight: 600; padding: 0 6px; }
 .checks li.warn::before { content: "!"; background: var(--warn); }
 .checks li.bad { border-left-color: var(--bad); }
 .checks li.bad::before { content: "\00D7"; background: var(--bad); }
+.findings li { display: grid; gap: 4px; }
+.finding-tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.finding-where { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+.finding-quote { font-family: Georgia, "Times New Roman", serif; font-size: 0.95rem; overflow-wrap: anywhere; }
+.finding-quote mark { background: var(--warn); color: var(--on-status); padding: 0 2px; border-radius: 2px; }
+.finding-fix { font-size: 0.9rem; font-weight: 600; color: var(--heading); }
+#checkSummary { margin-top: 16px; }
 .export { margin: 8px 0 16px; }
 .howto { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
 .howto summary { cursor: pointer; font-weight: 600; color: var(--heading); min-height: 32px; }
