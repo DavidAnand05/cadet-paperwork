@@ -119,8 +119,22 @@
     sig: '<w:ind w:left="5040"/>'
   };
   function blocksToXml(blocks) {
-    return blocks.map(b => b.t === "blank" ? "<w:p/>" :
-      "<w:p><w:pPr>" + PPR[b.t] + "</w:pPr>" + b.segs.map(run).join("") + "</w:p>").join("");
+    // Word decides page breaks, so mark what must stay together: each signature block, the blank
+    // lines above it and the last paragraph before it (Tongue and Quill: never a signature block alone).
+    const keep = new Set();
+    blocks.forEach((b, i) => {
+      if (b.t !== "sig" || (blocks[i - 1] && blocks[i - 1].t === "sig")) return;
+      let j = i - 1;
+      while (j >= 0 && blocks[j].t === "blank") keep.add(j--);
+      if (j >= 0) keep.add(j);
+      for (let k = i; k + 1 < blocks.length && blocks[k + 1].t === "sig"; k++) keep.add(k);
+    });
+    const KEEP = "<w:keepNext/><w:keepLines/>";
+    // Word requires pStyle first in paragraph properties, then keepNext and keepLines, then indents.
+    const withKeep = (ppr, k) => !k ? ppr : ppr.startsWith("<w:pStyle") ? ppr.replace(/^(<w:pStyle[^>]*\/>)/, "$1" + k) : k + ppr;
+    return blocks.map((b, i) => b.t === "blank"
+      ? (keep.has(i) ? "<w:p><w:pPr><w:keepNext/></w:pPr></w:p>" : "<w:p/>")
+      : "<w:p><w:pPr>" + withKeep(PPR[b.t], keep.has(i) ? KEEP : "") + "</w:pPr>" + b.segs.map(run).join("") + "</w:p>").join("");
   }
 
   async function exportDocx(state, templateUrl, patch) {
@@ -231,11 +245,14 @@
 
     // Keep each signature block on the same page as at least two lines of text above it.
     const keepFrom = {};
+    let prev = null;   // [start, end] of the previous keep-together range
     sigStarts.forEach(s => {
       let i = s, text = 0;
       while (i > 0 && text < 2) { i--; if (rows[i].t !== "blank") text++; }
       let e = s; while (e + 1 < rows.length && rows[e + 1].t === "sig") e++;
-      keepFrom[i] = e;
+      // If this range reaches back into the previous signature block, move both blocks together.
+      if (prev && i <= prev[1]) { delete keepFrom[prev[0]]; i = prev[0]; }
+      keepFrom[i] = e; prev = [i, e];
     });
 
     // Letterhead images

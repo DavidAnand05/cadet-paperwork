@@ -73,6 +73,19 @@ async def run(browser, out, label):
     check(len(r.pages) == 1 and "MEMORANDUM FOR" in text and "DEPARTMENT OF THE AIR FORCE" in text and "TAYLOR R. MORGAN, C1C, USAFA" in text
           and len(sigs) == 2, "PDF has letterhead, text and author and approver signature fields (%d pages, %d fields)" % (len(r.pages), len(sigs)))
 
+    # A two-page memorandum keeps each signature block whole and with text above it
+    await pg.click('.stepper button[data-step="0"]')
+    idx = (await pg.eval_on_selector_all("#exampleButtons button", "els => els.map(e => e.textContent)")).index("Event plan")
+    ex = pg.locator(f"#exampleButtons button >> nth={idx}"); await ex.click()
+    if (await ex.inner_text()) != "Event plan": await ex.click()
+    await pg.click('.stepper button[data-step="4"]')
+    p = await save(pg, "#exportPdf", out, "event.pdf")
+    pages = [x.extract_text() for x in PdfReader(p).pages]
+    sig_page = next(t for t in pages if "CASEY M. DIAZ" in t)
+    before = sig_page.split("CASEY M. DIAZ")[0].split("\n")
+    check("Cadet, CS-11" in sig_page and "JORDAN A. REYES" in sig_page and len([l for l in before if l.strip() and l.strip() != str(pages.index(sig_page) + 1)]) >= 2,
+          "page breaks keep signature blocks whole and with text (%d pages)" % len(pages))
+
     # Character letter follows the owner's template
     await pg.click('.stepper button[data-step="0"]')
     await pg.click("#typeChoices .choice:has-text('Character letter')")
