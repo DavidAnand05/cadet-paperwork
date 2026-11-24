@@ -168,6 +168,23 @@ async def run(browser, out, label):
     v = PdfReader(p).get_fields()["9SUMMARYOFCOUNSELING Give details facts specific dates times names sequence of events etc"].get("/V")
     check(v == "On 23 November 2026 we discussed formation standards.", "Form 174 fills the counseling summary")
 
+    # AFCW IMT 311, bed rest or post duty rest
+    await pg.click("#formChoices .choice:has-text('AFCW IMT 311')")
+    await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('AFCW IMT 311')")
+    await pg.locator("#fillFields").get_by_label("Cadet name (Last, First)").fill("Morgan, Taylor")
+    await pg.locator("#fillFields").get_by_label("Lunch").check()
+    p = await save(pg, "#fillDownload", out, "f311.pdf")
+    f = PdfReader(p).get_fields()
+    check(f["CADET NAME Please print Last First"].get("/V") == "Morgan, Taylor" and f["Check Box2"].get("/V") == "/Yes" and f["Check Box1"].get("/V") in (None, "/Off"),
+          "Form 311 fills the name and the lunch box")
+
+    # eSSS preview: drawn from its LiveCycle design, with boxes at the design's positions
+    await pg.click("#formChoices .choice:has-text('eSSS')")
+    await pg.wait_for_selector(".fp-design .fp-box", state="attached", timeout=20000)
+    await pg.locator("#fillFields").get_by_label("Subject").focus()
+    on = await pg.evaluate("(() => { const b = document.querySelector('.fp-design .fp-box.on'); return b ? [parseFloat(b.style.left), parseFloat(b.style.top), parseFloat(b.style.width)] : null; })()")
+    check(on is not None and abs(on[0] - 37.4) < 2 and abs(on[1] - 268.1) < 2 and on[2] > 400, "eSSS preview outlines the Subject box at its printed position (%s)" % on)
+
     # Uploaded fillable PDF and Word template
     await pg.click("#formChoices .choice:has-text('Your own template')")
     await pg.set_input_files("#fillFile", os.path.join(FIX, "blank_form.pdf"))

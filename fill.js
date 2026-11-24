@@ -165,9 +165,8 @@
       const def = opts.def ? DEFS[opts.def] : detectDef(raw);
       current = { kind, name: file.name, bytes, def, items: buildItems(raw, def) };
       if (kind === "acro" && boxes) window.FormPreview.show(bytes, boxes).then(() => { if (current && current.bytes === bytes) syncPreview(); });
-      else window.FormPreview.message(kind === "xfa"
-        ? "This form is an Adobe LiveCycle form, which only Adobe Acrobat and Reader can draw, so there is no preview. Every blank still fills."
-        : "Word templates fill without a preview. Your download keeps the template's layout.");
+      else if (kind === "xfa") window.FormPreview.showXfa(bytes, boxes).then(() => { if (current && current.bytes === bytes) syncPreview(); });
+      else window.FormPreview.message("Word templates fill without a preview. Your download keeps the template's layout.");
       prefill(raw, def, opts.preset);
       const n = current.items.filter(i => !i.group).length;
       status((def ? def.title : file.name) + ": " + n + (n === 1 ? " blank" : " blanks") + " to fill.");
@@ -292,14 +291,15 @@
   function tooltip(field) {
     try { const tu = field.acroField.dict.lookup(P.PDFName.of("TU")); return tu && tu.decodeText ? tu.decodeText().trim() : ""; } catch (e) { return ""; }
   }
-  function xfaDatasets(pdf) {
+  function xfaDatasets(pdf) { return xfaPacket(pdf, "datasets"); }
+  function xfaPacket(pdf, packet) {
     const acro = pdf.catalog.lookup(P.PDFName.of("AcroForm"));
     if (!(acro instanceof P.PDFDict)) return null;
     const xfa = acro.lookup(P.PDFName.of("XFA"));
     if (!(xfa instanceof P.PDFArray)) return null;
     for (let i = 0; i < xfa.size(); i += 2) {
       const name = xfa.lookup(i);
-      if (name && name.decodeText && name.decodeText() === "datasets") {
+      if (name && name.decodeText && name.decodeText() === packet) {
         const ref = xfa.get(i + 1);
         const stream = pdf.context.lookup(ref);
         const text = new TextDecoder().decode(P.decodePDFRawStream(stream).decode());
@@ -326,10 +326,40 @@
     out.forEach(o => { o.key = o.key.replace(/^([^\[]+)\[0\]\//, "$1/"); });
     return { doc, out };
   }
+  /* Where each blank sits on a LiveCycle form, from its design (template). Positions are summed through
+     the subforms around each field and converted to points from the top left of the page. */
+  function xfaBoxes(pdf) {
+    const t = xfaPacket(pdf, "template");
+    if (!t) return null;
+    const doc = new DOMParser().parseFromString(t.text, "application/xml");
+    const unit = v => { const m = /^(-?[\d.]+)(mm|in|pt|cm)?$/.exec((v || "0").trim()); if (!m) return 0; const n = parseFloat(m[1]);
+      return m[2] === "mm" ? n * 72 / 25.4 : m[2] === "cm" ? n * 720 / 25.4 : m[2] === "in" ? n * 72 : n; };
+    const boxes = new Map();
+    let page = -1;
+    (function walk(el, ox, oy, depth) {
+      Array.from(el.children).forEach(c => {
+        const tag = c.localName;
+        if (tag === "pageSet" || tag === "proto") return;
+        const x = ox + unit(c.getAttribute("x")), y = oy + unit(c.getAttribute("y"));
+        if (tag === "subform") {
+          if (depth === 1) page++;   // each subform directly under the root is a page
+          walk(c, x, y, depth + 1);
+        } else if (tag === "field" && c.getAttribute("name")) {
+          const n = c.getAttribute("name");
+          if (!boxes.has(n)) boxes.set(n, []);
+          boxes.get(n).push({ page: Math.max(page, 0), x, y, w: unit(c.getAttribute("w")), h: unit(c.getAttribute("h")) });
+        } else if (tag === "subformSet" || tag === "area" || tag === "exclGroup") walk(c, x, y, depth + 1);
+      });
+    })(doc.documentElement.querySelector("subform") ? doc.documentElement : doc.documentElement, 0, 0, 0);
+    return boxes.size ? boxes : null;
+  }
+
   async function pdfFields(bytes) {
     const pdf = await P.PDFDocument.load(bytes, { ignoreEncryption: true });
-    // Read LiveCycle data before getForm(), which strips it.
+    // Read LiveCycle data and design positions before getForm(), which strips them.
     const ds = xfaDatasets(pdf);
+    let xboxes = null;
+    try { xboxes = ds ? xfaBoxes(pdf) : null; } catch (e) { /* no positions */ }
     let fields = [];
     try { fields = pdf.getForm().getFields(); } catch (e) { fields = []; }
     if (fields.length) {
@@ -364,7 +394,7 @@
     }
     if (!ds) return { raw: [], kind: "acro" };
     const { out } = xfaLeaves(ds.text);
-    return { raw: out.map(o => ({ key: o.key, label: o.key.split("/").pop().replace(/\[\d+\]$/, "").replace(/_/g, " "), value: o.el.textContent })), kind: "xfa" };
+    return { raw: out.map(o => ({ key: o.key, label: o.key.split("/").pop().replace(/\[\d+\]$/, "").replace(/_/g, " "), value: o.el.textContent })), kind: "xfa", boxes: xboxes };
   }
   const winAnsiSafe = t => String(t).replace(/[‐-‒]/g, "-").replace(/[^\x00-\xFF–—‘’“”•…€]/g, "");
   async function fillPdf() {

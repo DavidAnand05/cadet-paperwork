@@ -303,7 +303,25 @@
     ]
   };
 
-  window.FORM_DEFS = { esss, form99, checklist, form10, feedback, form174 };
+  /* ---------- AFCW IMT 311, Bed Rest or Post Duty Rest Notification ---------- */
+  const form311 = {
+    title: "AFCW IMT 311, Bed Rest or Post Duty Rest Notification",
+    output: "Print the form and post it in your room door clip for the whole rest period.",
+    fields: [
+      { group: "Cadet" },
+      { id: "name", label: "Cadet name (Last, First)", keys: ["CADET NAME Please print Last First"], hint: "Such as Morgan, Taylor." },
+      { id: "sig", label: "Cadet signature", keys: ["CADET SIGNATURE"], hint: "Leave this blank and sign the printed form, unless your squadron accepts a typed name." },
+      { group: "Rest period" },
+      { id: "entered", label: "Date and time entered", keys: ["DATETIME ENTERED"], type: "date", hint: "Day, month, year and time, such as 24 Nov 26 1400." },
+      { id: "until", label: "Do not disturb prior to (date and time)", keys: ["Date Time DO NOT DISTURB PRIOR TO"], hint: "When others may disturb you again, such as 25 Nov 26 0600. Only security or safety emergencies override it." },
+      { group: "Box meals (bed rest only)" },
+      { id: "breakfast", label: "Breakfast", keys: ["Check Box1"], type: "check", hint: "Request no more box meals than the meals you miss during authorized bed rest. Post duty rest does not include box meals." },
+      { id: "lunch", label: "Lunch", keys: ["Check Box2"], type: "check" },
+      { id: "dinner", label: "Dinner", keys: ["Check Box3"], type: "check" }
+    ]
+  };
+
+  window.FORM_DEFS = { esss, form99, checklist, form10, feedback, form174, form311 };
 
   /* ---------- OCONUS steps, from the CS-11 OCONUS Package Instruction Manual ---------- */
   window.OCONUS_STEPS = [
@@ -372,6 +390,12 @@
       source: "Use the blank Form 174 below for general counseling, either positive or corrective. You can also upload your own copy.",
       guide: "State the issue, the standard and what the cadet must do to meet it. Record the cadet's comments in their own words. When both of you have signed, send the Form 174 to the squadron first sergeant.",
       files: [{ label: "Load the blank Form 174", url: "assets/forms/af-form-174.pdf", name: "Lastname_AF_Form_174_DDMONYYYY.pdf", def: "form174" }]
+    },
+    form311: {
+      name: "AFCW IMT 311, Bed Rest or Post Duty Rest Notification",
+      source: "Use the blank Form 311 for bed rest after an injury or illness email, or for post duty rest after a cadet command center shift. You can also upload your own copy.",
+      guide: "Fill your name and the rest period, check the box meals you need for bed rest, then print the form and post it in your room door clip.",
+      files: [{ label: "Load the blank Form 311", url: "assets/forms/afcw-imt-311.pdf", name: "Lastname_AFCW_Form_311_DDMONYYYY.pdf", def: "form311" }]
     },
     own: {
       name: "Your own template",
