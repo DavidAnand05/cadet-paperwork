@@ -26,7 +26,7 @@ A free, public, unofficial website that helps U.S. Air Force Academy cadets writ
 | File | Purpose |
 |---|---|
 | `index.html` | The page: four tabs (Write a memorandum, Fill a form, Check paperwork, Feedback). An inline head script sets `data-theme` before the page draws. |
-| `styles.css` | All styles. Design tokens at the top, with a dark theme on `:root[data-theme="dark"]`. U.S. Web Design System conventions. |
+| `styles.css` | All styles. Design tokens at the top, with a dark theme on `:root[data-theme="dark"]`. Design concept "the correspondence desk" (made with the frontend-design skill): a quiet Bond canvas (#F3F5F8) where the memorandum page is the only raised object; Ink Navy #0B1F3A, Ultramarine #1B4DB1 (letterhead ink), Academy Silver #C3CAD4. Public Sans for the interface, Source Serif 4 (vendored, OFL in `assets/fonts/`) for titles. Numbered stepper because the steps are a real sequence; Next names the next step; Tongue and Quill tips sit as margin notes. Avoid all-caps labels and identical card-and-shadow panels. |
 | `app.js` | Memorandum builder: 5 steps (Purpose, Recipient, You, Content, Review), state in localStorage (`cadet-mfr-builder-v1`), review checks, export, phone preview sheet. Exposes `window.MFRApp`. |
 | `mfr-docx.js` | `MFR.buildBlocks(state)` builds the memorandum as neutral lines, used by both the live preview and the .docx export. `MFR.exportDocx` writes those lines into the letterhead template. |
 | `examples.js` | Four finished example memorandums written to T&Q. |

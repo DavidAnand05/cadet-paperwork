@@ -346,6 +346,7 @@
     $("#stepCount").textContent = "Step " + (S.step + 1) + " of " + STEPS + ": " + names[S.step];
     $("#prevStep").style.visibility = S.step === 0 ? "hidden" : "visible";
     $("#nextStep").hidden = S.step === STEPS - 1;
+    if (S.step < STEPS - 1) $("#nextStep").textContent = "Next: " + names[S.step + 1];
     if (S.step === 4) renderChecks();
   }
   $$(".stepper button").forEach(b => b.addEventListener("click", () => goStep(Number(b.dataset.step))));
