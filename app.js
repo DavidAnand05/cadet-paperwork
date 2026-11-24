@@ -51,6 +51,18 @@
         "Offer to answer questions."
       ]
     },
+    character: {
+      name: "Character letter", desc: "Speak to a cadet's character for the authorities reviewing a case, such as a Form 10 or an honor case.",
+      approval: false, to: "reviewing",
+      subject: "Character Letter for Grade Firstname M. Lastname",
+      prompts: [
+        "Tell the reviewing authorities who you are and why you can speak to the cadet's character: your name, grade, duty title and squadron, time in service, how many people you supervise and for how long, and your accomplishments.",
+        "Describe your relationship with the cadet: how long you have known them, whether your contact is duty-related, social or both, your role and theirs, and how often you have observed them (daily, weekly).",
+        "Give your opinion of the cadet and support it with specific examples: duty performance, military bearing, community service, attitude and goals. Describe times the cadet stood out. State that you are aware of the allegations against the cadet.",
+        "Conclude the letter. Invite the reader to contact you, and give your phone number and email address."
+      ],
+      note: "A character letter goes to every reviewing authority, so write it for a reader who does not know you or the cadet."
+    },
     general: {
       name: "Something else", desc: "A general memorandum. You write the structure.",
       approval: false, to: "sqcc",
@@ -66,6 +78,7 @@
     cadetcc: { name: "Cadet Squadron Commander", symbol: sym => sym + "/C/CC", title: sym => "Cadet Commander, " + sym, grade: "C1C" },
     gpcc: { name: "Group AOC or Commander", symbol: () => "", title: () => "", grade: "Lt Col" },
     cwcc: { name: "Commandant of Cadets", symbol: () => "USAFA/CW", title: () => "Commandant of Cadets", grade: "Brig Gen" },
+    reviewing: { name: "All reviewing authorities", symbol: () => "ALL REVIEWING AUTHORITIES", title: () => "", grade: "Maj" },
     record: { name: "Record only (no addressee)", symbol: () => "", title: () => "", grade: "Maj" },
     other: { name: "Someone else", symbol: () => "", title: () => "", grade: "Maj" }
   };

@@ -3,7 +3,7 @@
 A static website that helps cadets write Tongue and Quill memorandums and fill forms.
 
 - **Write a memorandum:** pick the purpose and the recipient, fill in guided fields, check a live preview and download a Word document on the squadron letterhead. Three finished examples show what a correct memorandum looks like.
-- **Fill a form:** load a built-in blank form (eSSS / AF Form 1768, AFCW IMT 99 and the CS-11 OCONUS travel package) or upload any fillable PDF, including Adobe LiveCycle forms, or a Word template with marked blanks. The site lists each blank with Tongue and Quill guidance and downloads the completed form. The OCONUS option adds a step-by-step checklist.
+- **Fill a form:** load a built-in blank form (eSSS / AF Form 1768, AFCW IMT 99, AFCW IMT 10, the CW Form 724 feedback worksheet and the CS-11 OCONUS travel package) or upload any fillable PDF, including Adobe LiveCycle forms, or a Word template with marked blanks. The site lists each blank with Tongue and Quill guidance and downloads the completed form. The OCONUS option adds a step-by-step checklist.
 - **Feedback:** cadets send feedback by email or as a GitHub issue. Set the address in `site-config.js`.
 
 Everything runs in the browser. Nothing typed into the site is uploaded or stored anywhere except the cadet's own browser.

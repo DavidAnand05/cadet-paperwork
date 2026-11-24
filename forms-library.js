@@ -156,7 +156,119 @@
     ])
   };
 
-  window.FORM_DEFS = { esss, form99, checklist };
+  /* A set of checkboxes where only one should be marked. Each option names the box it marks. */
+  const pick = (id, label, opts, hint) => ({ id, label, type: "pick", hint, options: opts.map(([l, k]) => ({ label: l, key: k })), keys: opts.map(o => o[1]) });
+
+  /* ---------- AFCW IMT 10, Report of Conduct ---------- */
+  const T = i => F("TextField1", i), D = i => F("DateField1", i), C = i => F("CheckBox1", i);
+  const form10 = {
+    title: "AFCW IMT 10, Report of Conduct",
+    output: "The reporting official fills Sections I and II. The rest belongs to the cadet and the chain of command.",
+    skip: [/SignatureField1/],
+    fields: [
+      { group: "Section I, personnel information" },
+      { id: "cadet", label: "1. Cadet name (Last, First, MI)", keys: [T(2)], hint: "The cadet the report is about, such as Morgan, Taylor R." },
+      { id: "sq", label: "2. Squadron", keys: [T(1)], hint: "Such as CS-11." },
+      { id: "year", label: "3. Class year", keys: [T(0)], hint: "Such as 2028." },
+      { id: "date", label: "4. Date", keys: [D(0)], type: "date", hint: "The date you write the report, such as 23 Nov 26." },
+      { id: "ro", label: "5. Reporting official (Last, First, MI)", keys: [T(3)], hint: "Your name, such as Reyes, Jordan A." },
+      { id: "grade", label: "6. Grade", keys: [T(5)], hint: "Such as C2C, Capt or MSgt." },
+      { id: "org", label: "7. Organization and office symbol", keys: [T(4)], hint: "Such as CS-11 or AFCW/CHG." },
+      pick("romfr", "8. Reporting official memorandum attached", [["Yes", C(0)], ["No", C(1)]], "Attach a memorandum when the narrative needs more room."),
+      { group: "Section II, incident details" },
+      { id: "narrative", label: "Conduct narrative", keys: [T(6)], type: "long", rows: 12,
+        hint: "Put the bottom line first, then state the facts in order: who, what, when, where and why, other cadets involved and any corrective action taken. Cite the regulation and paragraph for each standard. For a positive Form 10, describe what the cadet did, the result and why it deserves recognition." },
+      { group: "Section IV, cadet options (the cadet who receives the form)" },
+      { id: "received", label: "1. Date received", keys: [D(11)], type: "date" },
+      { id: "cinit", label: "2. Cadet initials", keys: [T(9)] },
+      pick("cmfr", "3. Memorandum attached", [["Yes", C(3)], ["No", C(2)]], "You may attach a memorandum within 3 duty days. Use Write a memorandum and choose Response to a Report of Conduct."),
+      { group: "Section III, initial processing (squadron use)" },
+      { id: "login", label: "1. Log-in date", keys: [D(12)], type: "date" },
+      { id: "ccf", label: "2. Squadron first sergeant initials", keys: [T(7)] },
+      { id: "elinit", label: "3. Element leader or supervisor initials", keys: [T(8)] },
+      { group: "Section V, chain-of-command recommendations" },
+      ...[["el", "1. Element leader or supervisor", 10, 10], ["flt", "2. Cadet flight commander", 11, 9], ["ccc", "3. Cadet commander", 12, 8],
+          ["sqaoc", "4. Squadron AOC", 13, 7], ["gpaoc", "5. Group AOC", 14, 6], ["cw", "6. Cadet Wing", 15, 5]].flatMap(([id, l, t, d], i) => [
+        { id: id + "Rec", label: l + ": recommendation and initials", keys: [T(t)], row: 100 + i, hint: i === 0 ? "A recommended sanction and initials, or None." : "" },
+        { id: id + "Date", label: "Date", keys: [D(d)], type: "date", row: 100 + i }
+      ]),
+      { group: "Section VI, final processing" },
+      { id: "dem", label: "1. Demerits", keys: [T(16)] },
+      { id: "conf", label: "2. Confinements", keys: [T(17)] },
+      { id: "pass", label: "3. Loss of pass privileges", keys: [T(18)] },
+      { id: "tours", label: "4. Tours", keys: [T(19)] },
+      { id: "pov", label: "5. Revoke privately owned vehicle privileges", keys: [T(20)] },
+      { id: "aorg", label: "7. Organization of awarding official", keys: [T(21)] },
+      { id: "awarded", label: "8. Date awarded", keys: [D(3)], type: "date" },
+      { id: "counseled", label: "10. Date counseled by awarding official", keys: [D(2)], type: "date" },
+      { group: "Section VII, final coordination" },
+      { id: "ronote", label: "1. Date reporting official notified", keys: [D(4)], type: "date" },
+      { id: "cwvvd", label: "3. Date CWVVD notified (category 3 and 4 offenses)", keys: [D(1)], type: "date" }
+    ]
+  };
+
+  /* ---------- CW Form 724, Cadet Comprehensive Assessment Worksheet (feedback) ---------- */
+  const B = s => "Check Box12.0.0." + s, R = s => B("1.1.5.1.2." + s);
+  const RATINGS = ["Failed to meet", "Met some expectations", "Met all expectations", "Exceeded expectations"];
+  const rate = (id, label, keys, hint) => pick(id, label, RATINGS.map((r, i) => [r, keys[i]]), hint);
+  const Q = (id, label, key) => ({ id, label, keys: [key], type: "long", rows: 3 });
+  const feedback = {
+    title: "CW Form 724, Cadet Comprehensive Assessment Worksheet",
+    output: "The rater fills Sections I through V before the session. The rater and ratee discuss Section VI together, and both sign after the session.",
+    skip: [/^Signature/],
+    fields: [
+      { group: "I. Personal information (the ratee)" },
+      { id: "name", label: "Name (Last, First MI)", keys: ["NAME"], hint: "Such as Morgan, Taylor R." },
+      { id: "rank", label: "Class year and grade", keys: ["CLASS YEAR AND RANK"], hint: "Such as 2028, C3C." },
+      { id: "unit", label: "Unit or organization", keys: ["UNITORGANIZATION"], hint: "Such as CS-11." },
+      { group: "II. Type of assessment" },
+      pick("type", "Type of assessment", [["Initial", R("0.1")], ["Mid-term", "Check Box15.0.0.0"], ["Follow-up", "Check Box15.0.1.0"], ["Ratee requested", "Check Box15.1.1.0"], ["Rater directed", "Check Box15.0.1.1"]],
+        "Initial also marks Initial or Not-Rated on every performance measure, because the form links those boxes."),
+      { group: "III. Job description" },
+      { id: "duty", label: "1. Duty title", keys: ["1 DUTY TITLE"], hint: "Use the title in the Air Force Cadet Wing (AFCW) Classification Directory, such as Flight Commander." },
+      { id: "semester", label: "2. Semester", keys: ["Dropdown1"], type: "choice", options: ["Fall Semester", "Spring Semester", "Summer Semester Period 1", "Summer Semester Period 2", "Summer Semester Period 3"] },
+      { id: "duties", label: "3. Key duties, tasks and responsibilities", keys: ["Text1"], type: "long", rows: 4,
+        hint: "Summarize the duty summary for the position in the Classification Directory, in 1 to 4 lines. Select Open the Classification Directory above to look it up." },
+      { group: "IV. Performance measures" },
+      rate("perf", "1. Duty performance", [B("1.1.0"), B("0.1.0"), B("1.0.0.0.0"), B("1.0.0.1.0")],
+        "For initial feedback, choose Initial above and leave the ratings blank. For all other feedback, rate each measure."),
+      { id: "c1", label: "Comments on duty performance", keys: ["Text2"], type: "long", rows: 3,
+        hint: "For initial feedback, state your expectations. Otherwise, assess performance with specific examples and recommend improvements. Use active voice and short sentences." },
+      rate("motiv", "2a. Intrinsically motivated", [B("1.1.1"), B("0.1.1"), B("1.0.0.0.1"), B("1.0.0.1.1")]),
+      rate("know", "2b. Expert knowledge", [B("0.1.5.0.0"), B("1.0.0.0.5"), B("1.0.0.0.2"), B("1.0.0.1.2")]),
+      rate("dev", "2c. Develops others", [B("0.1.5.1.1"), B("0.1.2"), B("1.0.0.0.3"), B("1.0.0.1.3")]),
+      rate("police", "2d. Self-policing ethic", [B("0.1.5.0.1"), B("0.1.3"), B("1.0.0.0.4"), B("1.0.0.1.4")]),
+      { id: "c2", label: "Comments on professionalism", keys: ["Text3"], type: "long", rows: 3 },
+      rate("lead", "3. Leadership", [B("0.1.4"), B("1.1.2"), B("1.1.3"), B("1.1.4")]),
+      rate("follow", "3a. Followership", [B("1.1.5.0.0"), B("1.1.5.0.5"), B("1.1.5.1.5"), B("1.1.5.1.4")]),
+      rate("team", "3b. Teamwork", [R("0.0"), B("1.1.5.0.4"), B("1.1.5.0.3"), B("1.1.5.1.3")]),
+      { id: "c3", label: "Comments on leadership", keys: ["Text4"], type: "long", rows: 3 },
+      rate("char", "4. Character", [R("6.6"), R("6.5"), R("6.4"), R("5.6")]),
+      rate("integ", "4a. Integrity", [R("5.5"), R("6.0"), R("6.3"), R("4.6")]),
+      rate("service", "4b. Service before self", [R("6.2"), R("5.4"), R("5.3"), R("4.5")]),
+      rate("excel", "4c. Excellence", [R("6.1"), R("5.2"), R("5.1"), R("5.0")]),
+      { id: "c4", label: "Comments on character", keys: ["Text5"], type: "long", rows: 3 },
+      { group: "V. Additional expectations" },
+      { id: "addl", label: "Additional expectations", keys: ["Text15"], type: "long", rows: 5,
+        hint: "Such as accountability, caring for others, communication, judgment, physical fitness or resilience. For initial feedback, state your expectations; otherwise, assess how well the ratee met them." },
+      { group: "VI. Knowing your Airman (discuss during the session)" },
+      Q("q1", "1. What expectations and goals do you have for your job?", "1 What expectations and goals do you have for your job what do you think the job entails"),
+      Q("q2", "2. What potential challenges can you foresee?", "2 What potential challenges can you foresee"),
+      Q("q3", "3. How do you think you are performing in the unit?", "3 How do you think you are performing in the unit"),
+      Q("q4", "4. What are your goals for self-improvement? (Specific, measurable, actionable, realistic and timely)", "4 What are some of your goals for selfimprovement Goals should be Specific Measureable Actionable Realistic and Timely"),
+      Q("q4a", "4a. What are your personal goals (school, fitness, relational)?", "4a What are your personal goals school fitness relational"),
+      Q("q4b", "4b. How can I best support you in accomplishing your goals?", "4b How can I best support you in accomplishing your goals"),
+      Q("q5", "5. Do you have stressors in your life? If so, what are your goals for reducing them, and how can we help?", "5 Do you have stressors in your life If so what are your goals for reducing them How can we help"),
+      Q("q6", "6. How would you define a good wingman, and how would you rate yourself as one? Do you have a wingman and at least one mentor?", "6 How would you define a good wingman  How would you rate yourself as a wingman Provide examples"),
+      Q("q7", "7. Do you take part in any high-risk activities? Have you completed AF Form 4391? Have you had any mishaps?", "7 Do you have Wingmen  Do you have at least one mentor"),
+      Q("q8", "8. Would you like to offer any suggestions or feedback (unit improvements, safety, productivity, programs, living conditions)?", "8 Would you like to offer any suggestionsfeedback eg unit improvements safety productivity programs living conditions"),
+      Q("q9", "9. Expectations for the unit and ratee (strengths, areas for improvement, recommendations)", "9 Expectations for unit and ratee areas for improvement strengths and weaknesses recommendations for improvement"),
+      { group: "Signatures" },
+      { id: "date", label: "Date", keys: ["DATE"], type: "date", hint: "The date of the session, such as 23 Nov 26. The ratee and rater sign with their CAC after the session." }
+    ]
+  };
+
+  window.FORM_DEFS = { esss, form99, checklist, form10, feedback };
 
   /* ---------- OCONUS steps, from the CS-11 OCONUS Package Instruction Manual ---------- */
   window.OCONUS_STEPS = [
@@ -206,8 +318,16 @@
     },
     form10: {
       name: "Form 10, Report of Conduct",
-      source: "Get the blank AFCW IMT 10 from your squadron, then upload it below. To respond to a Form 10 you received, use Write a memorandum and choose Response to a Report of Conduct.",
-      guide: "In the conduct narrative, state the facts in order: what happened, the date and time, other cadets involved and any corrective action. Cite the regulation and paragraph for each standard."
+      source: "Use the blank AFCW IMT 10 below for a positive or a negative report, or upload your own copy. To respond to a Form 10 you received, use Write a memorandum and choose Response to a Report of Conduct.",
+      guide: "As the reporting official, fill Sections I and II. In the conduct narrative, state the facts in order: what happened, the date and time, other cadets involved and any corrective action. Cite the regulation and paragraph for each standard. Leave the later sections for the cadet and the chain of command.",
+      files: [{ label: "Load the blank Form 10", url: "assets/forms/afcw-imt-10.pdf", name: "Lastname_AFCW_Form_10_DDMONYYYY.pdf", def: "form10" }]
+    },
+    feedback: {
+      name: "Feedback worksheet (CW Form 724)",
+      source: "Use the blank Cadet Comprehensive Assessment Worksheet below for initial, mid-term or follow-up feedback, or upload your own copy. For the duty title and key duties, look up the position in the Air Force Cadet Wing (AFCW) Classification Directory.",
+      guide: "Fill Sections I through V before the session. For initial feedback, state your expectations; for all other feedback, assess performance with specific examples. Discuss Section VI with the ratee, then both of you sign.",
+      files: [{ label: "Load the blank feedback worksheet", url: "assets/forms/cw-form-724-feedback.pdf", name: "FEEDBACK_LASTNAME_SEMESTER.pdf", def: "feedback" }],
+      links: [{ label: "Open the Classification Directory (reference)", url: "assets/forms/afcw-classification-directory.pdf" }]
     },
     form174: {
       name: "AF Form 174, Record of Individual Counseling",

@@ -55,6 +55,11 @@
       b.addEventListener("click", () => loadLibrary(f));
       lf.appendChild(b);
     });
+    (F.links || []).forEach(l => {
+      const a = document.createElement("a");
+      a.className = "btn ghost"; a.href = l.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label;
+      lf.appendChild(a);
+    });
     $("#uploadHeading").textContent = F.files ? "2. Or upload your own copy" : "2. Upload the blank form";
     renderOconus(!!F.oconus);
     $("#formGuide").textContent = (current && current.def && current.def.output ? current.def.output + " " : "") +
@@ -149,6 +154,7 @@
     const byKey = Object.fromEntries(raw.map(r => [r.key, r.value]));
     current.items.forEach(it => {
       if (it.group) return;
+      if (it.type === "pick") { const o = it.options.find(o => byKey[o.key] === true); if (o) values[it.id] = o.label; return; }
       const v = byKey[it.keys[0]];
       if (v !== undefined && v !== "" && v !== false) values[it.id] = v;
     });
@@ -180,9 +186,9 @@
         row.appendChild(input); row.appendChild(document.createTextNode(" Checked"));
         wrap.appendChild(row);
         input.addEventListener("change", () => { values[f.id] = input.checked; dirty.add(f.id); });
-      } else if (f.type === "choice") {
+      } else if (f.type === "choice" || f.type === "pick") {
         input = document.createElement("select");
-        const opts = f.options.slice(); if (v && !opts.includes(v)) opts.push(v);
+        const opts = f.type === "pick" ? f.options.map(o => o.label) : f.options.slice(); if (v && !opts.includes(v)) opts.push(v);
         ["", ...opts].forEach(o => { const op = document.createElement("option"); op.value = o; op.textContent = o || "Select"; input.appendChild(op); });
         input.value = v || "";
         wrap.appendChild(input);
@@ -313,6 +319,13 @@
     current.items.forEach(it => {
       if (it.group || !dirty.has(it.id)) return;
       const v = values[it.id];
+      if (it.type === "pick") {
+        it.options.forEach(o => {
+          try { const f = form.getCheckBox(o.key); o.label === v ? f.check() : f.uncheck(); }
+          catch (e) { console.warn("Could not fill " + o.key, e); }
+        });
+        return;
+      }
       it.keys.forEach(k => {
         try {
           const f = form.getField(k);

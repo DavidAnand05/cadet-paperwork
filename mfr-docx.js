@@ -39,7 +39,9 @@
     blank();
 
     const meName = personName(s.me.first, s.me.mi, s.me.last);
-    line("from", { text: "FROM:  " + sym + "/" + s.me.cls + " " }, seg(meName, "Firstname M. Lastname"));
+    // A character letter comes from a person, not an office: "FROM:  C1C Firstname M. Lastname".
+    if (s.type === "character") line("from", { text: "FROM:  " + s.me.cls + " " }, seg(meName, "Firstname M. Lastname"));
+    else line("from", { text: "FROM:  " + sym + "/" + s.me.cls + " " }, seg(meName, "Firstname M. Lastname"));
     blank();
 
     line("subject", { text: "SUBJECT:  " }, seg(s.subject, "Subject in Title Case"));

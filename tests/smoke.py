@@ -57,6 +57,15 @@ async def run(browser, out, label):
         doc = z.read("word/document.xml").decode()
     check("MEMORANDUM FOR" in doc and "APPROVED / DISAPPROVED" in doc, "memorandum exports with approval block")
 
+    # Character letter follows the owner's template
+    await pg.click('.stepper button[data-step="0"]')
+    await pg.click("#typeChoices .choice:has-text('Character letter')")
+    await pg.click('.stepper button[data-step="4"]')
+    p = await save(pg, "#exportDocx", out, "character.docx")
+    with zipfile.ZipFile(p) as z:
+        doc = z.read("word/document.xml").decode()
+    check("ALL REVIEWING AUTHORITIES" in doc and "FROM:  CS-" not in doc, "character letter uses the reviewing-authorities format")
+
     # eSSS (LiveCycle form)
     await pg.click(".doc-tab[data-doc=fill]")
     await pg.click("#libraryFiles button >> nth=0")
@@ -82,8 +91,35 @@ async def run(browser, out, label):
     p = await save(pg, "#fillDownload", out, "checklist.pdf")
     check(PdfReader(p).get_fields()["Initial When CompletedRow1"].get("/V") == "TCA", "OCONUS checklist fills")
 
+    # Form 10, Report of Conduct
+    await pg.click("#formChoices .choice:has-text('Form 10')")
+    await pg.click("#libraryFiles button >> nth=0")
+    await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('AFCW IMT 10')")
+    await pg.get_by_label("1. Cadet name (Last, First, MI)").fill("Morgan, Taylor R")
+    await pg.get_by_label("8. Reporting official memorandum attached").select_option("Yes")
+    p = await save(pg, "#fillDownload", out, "f10.pdf")
+    f = PdfReader(p).get_fields(); k = "topmostSubform[0].Page1[0]."
+    check(f[k + "TextField1[2]"].get("/V") == "Morgan, Taylor R" and f[k + "CheckBox1[0]"].get("/V") == "/1"
+          and f[k + "CheckBox1[1]"].get("/V") in (None, "/Off"), "Form 10 fills name and Yes box")
+
+    # Feedback worksheet, with the Classification Directory as a reference link
+    await pg.click("#formChoices .choice:has-text('Feedback worksheet')")
+    href = await pg.get_attribute("#libraryFiles a", "href")
+    check(href and (await pg.request.get(URL + href)).ok, "Classification Directory link opens")
+    await pg.click("#libraryFiles button >> nth=0")
+    await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('CW Form 724')")
+    await pg.get_by_label("Name (Last, First MI)").fill("Diaz, Casey M")
+    await pg.get_by_label("Type of assessment").select_option("Mid-term")
+    await pg.get_by_label("1. Duty performance").select_option("Exceeded expectations")
+    await pg.get_by_label("7. Do you take part in any high-risk activities?", exact=False).fill("None")
+    p = await save(pg, "#fillDownload", out, "feedback.pdf")
+    f = PdfReader(p).get_fields()
+    check(f["NAME"].get("/V") == "Diaz, Casey M" and f["Check Box15.0.0.0"].get("/V") == "/Yes"
+          and f["Check Box12.0.0.1.0.0.1.0"].get("/V") == "/Yes"
+          and f["7 Do you have Wingmen  Do you have at least one mentor"].get("/V") == "None", "feedback worksheet fills text, type and rating")
+
     # Uploaded fillable PDF and Word template
-    await pg.click("#formChoices .choice >> nth=5")
+    await pg.click("#formChoices .choice:has-text('Your own template')")
     await pg.set_input_files("#fillFile", os.path.join(FIX, "blank_form.pdf"))
     await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('blank_form')")
     await pg.fill("#ff0", "Upload, Test")
