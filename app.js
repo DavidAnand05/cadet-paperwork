@@ -4,6 +4,13 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const STORE = "cadet-mfr-builder-v1";
 
+  /* Text boxes grow to fit what is typed, so a long paragraph is never hidden inside its box. */
+  const grow = t => { if (!t.offsetParent) return; t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; };
+  window.autoGrow = root => (root || document).querySelectorAll("textarea.grow").forEach(grow);
+  document.addEventListener("input", e => { if (e.target.classList && e.target.classList.contains("grow")) grow(e.target); });
+  let growTimer = null;
+  window.addEventListener("resize", () => { clearTimeout(growTimer); growTimer = setTimeout(() => window.autoGrow(), 150); });
+
   /* ---------- What the memo is for ---------- */
   const TYPES = {
     request: {
@@ -116,6 +123,7 @@
   function showDoc(doc) {
     $$(".doc-tab").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.doc === doc)));
     $$(".doc-view").forEach(v => { v.hidden = v.id !== "doc-" + doc; });
+    window.autoGrow();
   }
   $$(".doc-tab").forEach(b => b.addEventListener("click", () => showDoc(b.dataset.doc)));
 
@@ -205,7 +213,7 @@
     row.className = "item" + (sub ? " sub" : "");
     const t = document.createElement("span"); t.className = "tag"; t.textContent = tag;
     const input = document.createElement(textarea ? "textarea" : "input");
-    if (!textarea) input.type = "text";
+    if (!textarea) input.type = "text"; else input.className = "grow";
     input.value = value; input.placeholder = placeholder;
     input.setAttribute("aria-label", (tag ? tag + " " : "") + placeholder);
     input.addEventListener("input", () => { onInput(input.value); save(); renderPreview(); });
@@ -260,6 +268,7 @@
       }
       box.appendChild(row);
     });
+    window.autoGrow(box);
   }
   function renderAtts() {
     const box = $("#attList"); box.innerHTML = "";
@@ -348,6 +357,7 @@
     $("#nextStep").hidden = S.step === STEPS - 1;
     if (S.step < STEPS - 1) $("#nextStep").textContent = "Next: " + names[S.step + 1];
     if (S.step === 4) renderChecks();
+    window.autoGrow();
   }
   $$(".stepper button").forEach(b => b.addEventListener("click", () => goStep(Number(b.dataset.step))));
   $("#prevStep").addEventListener("click", () => { goStep(S.step - 1); $(".form-col").scrollIntoView({ block: "start" }); });

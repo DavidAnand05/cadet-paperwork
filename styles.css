@@ -129,6 +129,7 @@ input[type="text"], input[type="number"], input[type="date"], select, textarea {
   border: 1px solid var(--control); border-radius: var(--r-control); padding: 10px 12px; min-height: var(--target); background: var(--field); color: var(--ink); font-weight: 400; font-size: 1rem; width: 100%;
 }
 textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+textarea.grow { max-height: 70vh; overflow-y: auto; }
 input:focus, select:focus, textarea:focus { border-color: var(--primary); }
 input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; accent-color: var(--primary); }
 fieldset { border: 1px solid var(--line); border-radius: var(--r-panel); padding: 14px 18px 18px; margin: 24px 0 0; background: var(--paper); }
@@ -158,6 +159,8 @@ legend { font-weight: 600; padding: 0 6px; color: var(--heading); }
 .btn.danger { color: var(--bad); border-color: var(--bad); margin-top: 28px; }
 .btn.danger:hover { color: var(--bad); border-color: var(--bad); background: var(--paper); }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn-row > .btn.ghost { margin-top: 0; }
+.label-line { display: block; }
 
 /* Back and Next stay within reach while the content step grows */
 .step-nav { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: space-between; gap: 12px; margin-top: 36px; padding: 14px 0; border-top: 1px solid var(--line); background: var(--sky); }
@@ -242,7 +245,10 @@ legend { font-weight: 600; padding: 0 6px; color: var(--heading); }
 .fill-field .hint { margin: 0; }
 .field-group { font-family: var(--display); font-size: 1.25rem; font-weight: 600; margin: 22px 0 0; padding-top: 22px; border-top: 1px solid var(--line); color: var(--heading); }
 .fill-fields > .field-group:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
-.route-row { display: grid; grid-template-columns: 1.2fr 0.9fr 1.3fr; gap: 10px; }
+.route-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; }
+.route-row:has(> :nth-child(3)) { grid-template-columns: 1.2fr 0.9fr 1.3fr; }
+/* Two-column rows: give labels two lines so the answer and date boxes line up. */
+.route-row:not(:has(> :nth-child(3))) .fill-field > label { min-height: calc(2 * 1.55 * 0.875rem); }
 .tips-col { position: sticky; top: 20px; padding: 4px 0 4px 24px; border-left: 2px solid var(--rule); }
 .tips-col h3 { font-family: var(--display); font-size: 1.25rem; font-weight: 600; color: var(--heading); margin-bottom: 14px; }
 .tips { margin: 0; padding-left: 18px; display: grid; gap: 12px; font-size: 0.9375rem; color: var(--ink); }
@@ -330,7 +336,9 @@ legend { font-weight: 600; padding: 0 6px; color: var(--heading); }
   .stepper .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .stepper li + li::before { top: 21px; }
   .choice-grid, .choice-grid.compact { grid-template-columns: minmax(0, 1fr); }
-  .route-row { grid-template-columns: minmax(0, 1fr); }
+  .route-row, .route-row:has(> :nth-child(3)) { grid-template-columns: minmax(0, 1fr); }
+  .route-row .fill-field > label { min-height: 0 !important; }
+  .stack-sm > .field { flex-basis: 100%; }
   .item { grid-template-columns: 2em minmax(0, 1fr); }
   .item.sub { margin-left: 1.25em; }
   .tips-col { padding-left: 16px; }

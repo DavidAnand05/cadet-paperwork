@@ -190,7 +190,7 @@
       ...[["el", "1. Element leader or supervisor", 10, 10], ["flt", "2. Cadet flight commander", 11, 9], ["ccc", "3. Cadet commander", 12, 8],
           ["sqaoc", "4. Squadron Air Officer Commanding (AOC)", 13, 7], ["gpaoc", "5. Group AOC", 14, 6], ["cw", "6. Cadet Wing", 15, 5]].flatMap(([id, l, t, d], i) => [
         { id: id + "Rec", label: l + ": recommendation and initials", keys: [T(t)], row: 100 + i, hint: i === 0 ? "A recommended sanction and initials, or None." : "" },
-        { id: id + "Date", label: "Date", keys: [D(d)], type: "date", row: 100 + i }
+        { id: id + "Date", label: "Date", keys: [D(d)], type: "date", row: 100 + i, hint: "" }
       ]),
       { group: "Section VI, final processing" },
       { id: "dem", label: "1. Demerits", keys: [T(16)] },

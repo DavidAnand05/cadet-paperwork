@@ -271,7 +271,7 @@
           <button class="btn ghost preview-close form-preview-close" id="formPreviewClose" type="button">Close</button>
           <span class="preview-note">The blank you are filling is outlined. The rest of its section is shaded.</span>
         </div>
-        <div class="fp-scroll"><div id="formPreview"><p class="fp-empty">Choose a form to see it here.</p></div></div>
+        <div class="fp-scroll" tabindex="0" role="region" aria-label="Form preview, scrollable"><div id="formPreview"><p class="fp-empty">Choose a form to see it here.</p></div></div>
       </aside>
     </div>
   </section>
@@ -315,7 +315,7 @@
     <div class="form-col narrow-col">
       <h2 class="view-title">Send feedback</h2>
       <p class="lede">Report a problem, suggest an improvement or ask a question. Your message opens in your email or on GitHub, so you can review it before you send it.</p>
-      <div class="field-row">
+      <div class="field-row stack-sm">
         <label class="field">Type
           <select id="fbType"><option>Problem</option><option>Suggestion</option><option>Question</option></select>
         </label>
@@ -326,7 +326,7 @@
       <label class="field wide">Message
         <textarea id="fbMessage" rows="6" placeholder="What happened, or what would make the site more useful?"></textarea>
       </label>
-      <label class="field wide">Your name and squadron <span class="optional">optional</span>
+      <label class="field wide"><span class="label-line">Your name and squadron <span class="optional">optional</span></span>
         <input id="fbName" type="text" autocomplete="name">
       </label>
       <p class="hint">Do not include controlled unclassified information (CUI), other people's personal information or details of a disciplinary case.</p>

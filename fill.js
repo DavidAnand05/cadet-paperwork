@@ -251,7 +251,7 @@
       } else {
         const long = f.type === "long" || f.multiline || (!f.type && g.long);
         input = document.createElement(long ? "textarea" : "input");
-        if (!long) input.type = "text";
+        if (!long) input.type = "text"; else input.className = "grow";
         if (long && f.rows) input.rows = f.rows;
         input.value = v || "";
         if (f.maxLength) input.maxLength = f.maxLength;
@@ -267,7 +267,8 @@
       input.id = id;
       input.addEventListener("focus", () => window.FormPreview.focus(itemKeys(f), f._sec));
       input.addEventListener(input.tagName === "SELECT" || input.type === "checkbox" ? "change" : "input", () => previewValue(f));
-      const hintText = [f.hint !== undefined ? f.hint : g.hint, f.count > 1 ? "This blank appears " + f.count + " times. One entry fills all of them." : ""].filter(Boolean).join(" ");
+      const baseHint = f.hint !== undefined ? f.hint : (f.type === "date" ? "Such as " + shortDate(now()) + "." : g.hint);
+      const hintText = [baseHint, f.count > 1 ? "This blank appears " + f.count + " times. One entry fills all of them." : ""].filter(Boolean).join(" ");
       if (hintText) { const p = document.createElement("p"); p.className = "hint"; p.textContent = hintText; wrap.appendChild(p); }
       if (f.row) {
         if (!rowBox || rowNum !== f.row) { rowBox = document.createElement("div"); rowBox.className = "route-row"; box.appendChild(rowBox); rowNum = f.row; }
@@ -278,6 +279,7 @@
     $("#fillFieldsWrap").hidden = false;
     $("#fillDownloadStatus").textContent = "";
     syncPreview();
+    window.autoGrow($("#fillFields"));
   }
 
   /* ---------- PDF: standard fields and Adobe LiveCycle (XFA) data ---------- */
@@ -354,6 +356,12 @@
     return boxes.size ? boxes : null;
   }
 
+  // pdf-lib logs a notice each time it drops LiveCycle data, which this site handles on purpose.
+  function quietForm(pdf) {
+    const warn = console.warn;
+    console.warn = (...a) => { if (!/XFA/.test(String(a[0]))) warn.apply(console, a); };
+    try { return pdf.getForm(); } finally { console.warn = warn; }
+  }
   async function pdfFields(bytes) {
     const pdf = await P.PDFDocument.load(bytes, { ignoreEncryption: true });
     // Read LiveCycle data and design positions before getForm(), which strips them.
@@ -361,7 +369,7 @@
     let xboxes = null;
     try { xboxes = ds ? xfaBoxes(pdf) : null; } catch (e) { /* no positions */ }
     let fields = [];
-    try { fields = pdf.getForm().getFields(); } catch (e) { fields = []; }
+    try { fields = quietForm(pdf).getFields(); } catch (e) { fields = []; }
     if (fields.length) {
       const tuCount = {};
       fields.forEach(f => { const t = tooltip(f); if (t) tuCount[t] = (tuCount[t] || 0) + 1; });
@@ -413,7 +421,7 @@
       pdf.catalog.delete(P.PDFName.of("Perms"));
       return new Blob([await pdf.save({ useObjectStreams: false })], { type: "application/pdf" });
     }
-    const form = pdf.getForm();
+    const form = quietForm(pdf);
     try { if (form.hasXFA()) form.deleteXFA(); } catch (e) { /* not XFA */ }
     const helv = await pdf.embedFont(P.StandardFonts.Helvetica);
     let acroDA = "";
