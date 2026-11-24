@@ -22,7 +22,7 @@
 
   function guidance(label) {
     const l = label.toLowerCase();
-    if (/signature|signed/.test(l)) return { hint: "Leave this blank. Sign the completed form with your CAC." };
+    if (/signature|signed/.test(l)) return { hint: "Leave this blank. Sign the completed form with your Common Access Card (CAC)." };
     if (/\bdate|dated\b/.test(l)) return { hint: "Write the date as day, month and year: " + longDate(now()) + ".", today: "long" };
     if (/grade|rank/.test(l)) return { hint: "Use the grade abbreviation, such as C1C, Capt, Maj or MSgt." };
     if (/symbol|organization|\borg\b|office|squadron|\bunit\b/.test(l)) return { hint: "Use capital letters for organizations and office symbols, such as CS-11/CC." };
@@ -30,7 +30,7 @@
     if (/name/.test(l)) return { hint: "Match the format the form asks for, such as Last, First, MI. In a signature block, use all capital letters." };
     if (/narrative|remark|summary|discussion|comment|description|purpose|detail|justification|reason|statement|counsel/.test(l))
       return { hint: "Put the bottom line first. Use active voice, short sentences and specific facts: who, what, when and where.", long: true };
-    if (/phone|dsn/.test(l)) return { hint: "Include the area code or DSN prefix." };
+    if (/phone|dsn/.test(l)) return { hint: "Include the area code or Defense Switched Network (DSN) prefix." };
     return { hint: "" };
   }
 

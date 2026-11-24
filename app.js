@@ -13,12 +13,12 @@
       prompts: [
         "State the request in one or two sentences: what you need approved, for whom, when and where.",
         "Give the purpose and justification. Why should the approver say yes?",
-        "Cite the authority, e.g., the paragraph of AFCWI 36-3501 that lets this person approve it, and any limits you will stay within.",
+        "Cite the authority, such as the paragraph of AFCWI 36-3501 that lets this person approve it, and any limits you will stay within.",
         "Lay out the plan: sign-out, return time, transportation, the cadet in charge and how you will manage risk."
       ]
     },
     response: {
-      name: "Response to a Report of Conduct", desc: "Your MFR attached to a Form 10: accept, contest or explain.",
+      name: "Response to a Report of Conduct", desc: "Your memorandum attached to a Form 10: accept, contest or explain.",
       approval: false, to: "sqcc",
       subject: "Response to AFCW IMT 10, Report of Conduct, Dated ...",
       refs: ["AFCW IMT 10, Report of Conduct, "],
@@ -56,8 +56,8 @@
       approval: false, to: "reviewing",
       subject: "Character Letter for Grade Firstname M. Lastname",
       prompts: [
-        "Tell the reviewing authorities who you are and why you can speak to the cadet's character: your name, grade, duty title and squadron, time in service, how many people you supervise and for how long, and your accomplishments.",
-        "Describe your relationship with the cadet: how long you have known them, whether your contact is duty-related, social or both, your role and theirs, and how often you have observed them (daily, weekly).",
+        "Tell the reviewing authorities who you are and why you can speak to the cadet's character: your name, grade, duty title, squadron and time in service. Add how many people you supervise, how long you have supervised and your accomplishments.",
+        "Describe your relationship with the cadet: how long you have known them and whether your contact is duty-related, social or both. Describe your role and theirs and how often you observe them, such as daily or weekly.",
         "Give your opinion of the cadet and support it with specific examples: duty performance, military bearing, community service, attitude and goals. Describe times the cadet stood out. State that you are aware of the allegations against the cadet.",
         "Conclude the letter. Invite the reader to contact you, and give your phone number and email address."
       ],
@@ -73,10 +73,10 @@
 
   /* ---------- Who it goes to ---------- */
   const RECIPIENTS = {
-    sqcc: { name: "Squadron Commander (AOC)", symbol: sym => sym + "/CC", title: sym => "Commander, " + sym, grade: "Maj" },
+    sqcc: { name: "Squadron Commander (Air Officer Commanding)", symbol: sym => sym + "/CC", title: sym => "Commander, " + sym, grade: "Maj" },
     amt: { name: "Academy Military Trainer", symbol: sym => sym + "/AMT", title: sym => "Academy Military Trainer, " + sym, grade: "MSgt" },
     cadetcc: { name: "Cadet Squadron Commander", symbol: sym => sym + "/C/CC", title: sym => "Cadet Commander, " + sym, grade: "C1C" },
-    gpcc: { name: "Group AOC or Commander", symbol: () => "", title: () => "", grade: "Lt Col" },
+    gpcc: { name: "Group Air Officer Commanding or Commander", symbol: () => "", title: () => "", grade: "Lt Col" },
     cwcc: { name: "Commandant of Cadets", symbol: () => "USAFA/CW", title: () => "Commandant of Cadets", grade: "Brig Gen" },
     reviewing: { name: "All reviewing authorities", symbol: () => "ALL REVIEWING AUTHORITIES", title: () => "", grade: "Maj" },
     record: { name: "Record only (no addressee)", symbol: () => "", title: () => "", grade: "Maj" },

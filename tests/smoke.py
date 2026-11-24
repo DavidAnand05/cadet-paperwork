@@ -118,6 +118,15 @@ async def run(browser, out, label):
           and f["Check Box12.0.0.1.0.0.1.0"].get("/V") == "/Yes"
           and f["7 Do you have Wingmen  Do you have at least one mentor"].get("/V") == "None", "feedback worksheet fills text, type and rating")
 
+    # AF Form 174, general counseling
+    await pg.click("#formChoices .choice:has-text('AF Form 174')")
+    await pg.click("#libraryFiles button >> nth=0")
+    await pg.wait_for_function("document.querySelector('#fillStatus').textContent.startsWith('AF Form 174')")
+    await pg.get_by_label("9. Summary of counseling").fill("On 23 November 2026 we discussed formation standards.")
+    p = await save(pg, "#fillDownload", out, "f174.pdf")
+    v = PdfReader(p).get_fields()["9SUMMARYOFCOUNSELING Give details facts specific dates times names sequence of events etc"].get("/V")
+    check(v == "On 23 November 2026 we discussed formation standards.", "Form 174 fills the counseling summary")
+
     # Uploaded fillable PDF and Word template
     await pg.click("#formChoices .choice:has-text('Your own template')")
     await pg.set_input_files("#fillFile", os.path.join(FIX, "blank_form.pdf"))

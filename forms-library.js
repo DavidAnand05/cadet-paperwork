@@ -66,7 +66,7 @@
       { group: "Action officer" },
       { id: "surname", label: "Surname of action officer and grade", keys: [E("SURNAME")], hint: "Your grade and last name, such as C1C Morgan." },
       { id: "symbol", label: "Symbol", keys: [E("SYMBOL")], hint: "Your organization and office symbol, such as CS-11." },
-      { id: "phone", label: "Phone", keys: [E("PHONE")], hint: "DSN or full 10-digit commercial number." },
+      { id: "phone", label: "Phone", keys: [E("PHONE")], hint: "Defense Switched Network (DSN) or full 10-digit commercial number." },
       { id: "typist", label: "Typist's initials", keys: [E("FIELD1")] },
       { id: "suspense", label: "Suspense date", keys: [E("CalDt")], type: "isodate", hint: "Leave blank if there is no suspense." },
       { group: "Subject and date" },
@@ -134,16 +134,16 @@
     "Confirm you have a valid passport",
     "Review the FCG page for each destination and identify all Section I and Section IV requirements",
     "Complete all Section I requirements in the FCG",
-    "Complete Antiterrorism Level 1 training (JKO course JS-US007)",
-    "Complete ISOPREP, if required in Section IV.C. of the FCG",
-    "Complete SERE 100.2 training, if required (JKO course J3T-A-US1329)",
+    "Complete Antiterrorism Level 1 training in Joint Knowledge Online (JKO), course JS-US007",
+    "Complete an isolated personnel report (ISOPREP), if required in Section IV.C. of the Foreign Clearance Guide (FCG)",
+    "Complete Survival, Evasion, Resistance and Escape (SERE) 100.2 training, if required (JKO course J3T-A-US1329)",
     "Receive a TT/IATP entry number, if required",
     "Complete any other requirements in Section IV.C. of the FCG",
-    "Submit a theater or country clearance request in APACS, if required",
+    "Submit a theater or country clearance request in the Aircraft and Personnel Automated Clearance System (APACS), if required",
     "Enroll in STEP through the Department of State",
     "Check Department of State alerts and warnings for each destination; notify the commander of any posted",
     "Complete the CW OCONUS Force Protection and Emergency Travel Plan",
-    "Receive the OSI foreign travel brief, if needed",
+    "Receive the Air Force Office of Special Investigations (OSI) foreign travel brief, if needed",
     "Submit the staff package to the approval authority"
   ];
   const checklist = {
@@ -188,7 +188,7 @@
       { id: "elinit", label: "3. Element leader or supervisor initials", keys: [T(8)] },
       { group: "Section V, chain-of-command recommendations" },
       ...[["el", "1. Element leader or supervisor", 10, 10], ["flt", "2. Cadet flight commander", 11, 9], ["ccc", "3. Cadet commander", 12, 8],
-          ["sqaoc", "4. Squadron AOC", 13, 7], ["gpaoc", "5. Group AOC", 14, 6], ["cw", "6. Cadet Wing", 15, 5]].flatMap(([id, l, t, d], i) => [
+          ["sqaoc", "4. Squadron Air Officer Commanding (AOC)", 13, 7], ["gpaoc", "5. Group AOC", 14, 6], ["cw", "6. Cadet Wing", 15, 5]].flatMap(([id, l, t, d], i) => [
         { id: id + "Rec", label: l + ": recommendation and initials", keys: [T(t)], row: 100 + i, hint: i === 0 ? "A recommended sanction and initials, or None." : "" },
         { id: id + "Date", label: "Date", keys: [D(d)], type: "date", row: 100 + i }
       ]),
@@ -258,28 +258,63 @@
       Q("q4", "4. What are your goals for self-improvement? (Specific, measurable, actionable, realistic and timely)", "4 What are some of your goals for selfimprovement Goals should be Specific Measureable Actionable Realistic and Timely"),
       Q("q4a", "4a. What are your personal goals (school, fitness, relational)?", "4a What are your personal goals school fitness relational"),
       Q("q4b", "4b. How can I best support you in accomplishing your goals?", "4b How can I best support you in accomplishing your goals"),
-      Q("q5", "5. Do you have stressors in your life? If so, what are your goals for reducing them, and how can we help?", "5 Do you have stressors in your life If so what are your goals for reducing them How can we help"),
+      Q("q5", "5. Do you have stressors in your life? If so, what are your goals for reducing them? How can we help?", "5 Do you have stressors in your life If so what are your goals for reducing them How can we help"),
       Q("q6", "6. How would you define a good wingman, and how would you rate yourself as one? Do you have a wingman and at least one mentor?", "6 How would you define a good wingman  How would you rate yourself as a wingman Provide examples"),
       Q("q7", "7. Do you take part in any high-risk activities? Have you completed AF Form 4391? Have you had any mishaps?", "7 Do you have Wingmen  Do you have at least one mentor"),
       Q("q8", "8. Would you like to offer any suggestions or feedback (unit improvements, safety, productivity, programs, living conditions)?", "8 Would you like to offer any suggestionsfeedback eg unit improvements safety productivity programs living conditions"),
       Q("q9", "9. Expectations for the unit and ratee (strengths, areas for improvement, recommendations)", "9 Expectations for unit and ratee areas for improvement strengths and weaknesses recommendations for improvement"),
       { group: "Signatures" },
-      { id: "date", label: "Date", keys: ["DATE"], type: "date", hint: "The date of the session, such as 23 Nov 26. The ratee and rater sign with their CAC after the session." }
+      { id: "date", label: "Date", keys: ["DATE"], type: "date", hint: "The date of the session, such as 23 Nov 26. The ratee and rater sign with their Common Access Card (CAC) after the session." }
     ]
   };
 
-  window.FORM_DEFS = { esss, form99, checklist, form10, feedback };
+  /* ---------- AF Form 174, Record of Individual Counseling (guidance from the CS-11 template) ---------- */
+  const form174 = {
+    title: "AF Form 174, Record of Individual Counseling",
+    output: "The counselor fills Sections II and III. The counselee fills Section IV. Leave Sections V and VI for the commander.",
+    skip: [/^Signature/],
+    fields: [
+      { group: "II. Personal data (the cadet being counseled)" },
+      { id: "name", label: "1. Name (Last, First, MI)", keys: ["1NAMELast First MI"], hint: "Such as Morgan, Taylor R." },
+      { id: "grade", label: "2. Grade", keys: ["2GRADE"], hint: "Such as C3C or C4C." },
+      { id: "ssn", label: "3. Social Security number (SSN)", keys: ["3SSN"], hint: "Write a dash (-). Never put an SSN on this form." },
+      { id: "afsc", label: "4. AFSC", keys: ["4AFSC"], hint: "Cadets have no Air Force Specialty Code (AFSC); write a dash (-)." },
+      { id: "phone", label: "5. Duty phone", keys: ["5DUTYPHONE"], hint: "Write a dash (-) unless the cadet has a duty phone." },
+      { id: "unit", label: "6. Unit and office symbol", keys: ["6UNITOFFICESYMBOL"], hint: "Such as CS-11. During Basic Cadet Training (BCT), write BCT/ and your element." },
+      { id: "reason", label: "7. Reason for counseling", keys: ["7REASONFORCOUNSELING"], type: "long", rows: 2, hint: "Why you are writing the Form 174, in a few words, such as Late to formation." },
+      { id: "other", label: "8. Other information", keys: ["8OTHERINFORMATION ie marital status course graduation date date assigned etc"], hint: "Write a dash (-) if nothing applies." },
+      { group: "III. Counseling" },
+      { id: "summary", label: "9. Summary of counseling", keys: ["9SUMMARYOFCOUNSELING Give details facts specific dates times names sequence of events etc"], type: "long", rows: 10,
+        hint: "State who, what, when and where. Add a sentence on why the counseling is necessary. Then describe the session, such as: On 23 November 2026 we discussed the cadet's late arrival to formation. I told the cadet that the squadron expects a C3C to arrive 5 minutes early." },
+      { id: "advice", label: "10. Recommendations and advice of counselor", keys: ["10RECOMMENDATIONSANDADVICEOFCOUNSELOR"], type: "long", rows: 6,
+        hint: "Write the plan the counselee and you agreed on to correct the behavior: what each of you will do and by when." },
+      { id: "counselor", label: "11. Name, grade and duty title of counselor", keys: ["11NAMEGRADEANDDUTYTITLEOFCOUNSELOR"], type: "long", rows: 2, hint: "Such as Jordan A. Reyes, C2C, Element Leader." },
+      { id: "date1", label: "13. Date", keys: ["13DATE"], type: "date", hint: "The date of the session, such as 23 Nov 26. Sign block 12 with your Common Access Card (CAC)." },
+      { group: "IV. Acknowledgment of counseling (the counselee)" },
+      { id: "comments", label: "14. Summary of counselee's comments", keys: ["14SUMMARYOFCOUNSELEESCOMMENTS Indicate if none"], type: "long", rows: 6,
+        hint: "The counselee writes anything they want here; hand them the form to type it. Write None if the counselee has no comments." },
+      { id: "counselee", label: "15. Name and grade of counselee", keys: ["15NAMEANDGRADEOFCOUNSELEE"], hint: "Such as Taylor R. Morgan, C3C. The counselee signs block 16." },
+      { id: "date2", label: "17. Date", keys: ["17DATE"], type: "date" },
+      { group: "V and VI. Referral and commander's comments (commander use)" },
+      { id: "referral", label: "18. Referral agencies recommended", keys: ["18REFERRALAGENCIESRECOMMENDED Personal Affairs Chaplain Legal Assistance Medical Social Actions Red Cross etc"], type: "long", rows: 2, hint: "Leave blank; the commander fills Sections V and VI." },
+      { id: "cc", label: "Commander's comments", keys: ["COMMANDERS COMMENTS VIRow1"], type: "long", rows: 3 },
+      { id: "ccname", label: "19. Name and grade of commander", keys: ["19NAMEANDGRADEOFCOMMANDER"] },
+      { id: "date3", label: "21. Date", keys: ["21DATE"], type: "date" }
+    ]
+  };
+
+  window.FORM_DEFS = { esss, form99, checklist, form10, feedback, form174 };
 
   /* ---------- OCONUS steps, from the CS-11 OCONUS Package Instruction Manual ---------- */
   window.OCONUS_STEPS = [
     { text: "Confirm your passport is valid through the end of your trip." },
-    { text: "Check the Foreign Clearance Guide (FCG) for each destination. Read the special notices and Section IV, which tells you whether you need an APACS request.", link: "https://apacs.milcloud.mil/fcg/fcg.cfm", linkText: "Open the FCG" },
-    { text: "If Section IV requires it, submit an APACS request: sign in, select Personnel Requester, then Create Personnel Request. Save a screenshot that shows Approved for your package. INDOPACOM destinations also need a TT/IATP number.", link: "https://apacs.milcloud.mil/", linkText: "Open APACS" },
+    { text: "Check the Foreign Clearance Guide (FCG) for each destination. Read the special notices and Section IV, which tells you whether you need an Aircraft and Personnel Automated Clearance System (APACS) request.", link: "https://apacs.milcloud.mil/fcg/fcg.cfm", linkText: "Open the FCG" },
+    { text: "If Section IV requires it, submit an APACS request: sign in, select Personnel Requester, then Create Personnel Request. Save a screenshot that shows Approved for your package. U.S. Indo-Pacific Command (INDOPACOM) destinations also need a TT/IATP number.", link: "https://apacs.milcloud.mil/", linkText: "Open APACS" },
     { text: "Enroll in the Department of State Smart Traveler Enrollment Program (STEP).", link: "https://step.state.gov/step/", linkText: "Open STEP" },
     { text: "Review Department of State alerts and travel advisories for each destination. Tell your commander about any that are posted.", link: "https://travel.state.gov/content/passports/en/alertswarnings.html", linkText: "Open travel advisories" },
-    { text: "Complete the OSI foreign travel brief, if required. Call OSI Detachment 439 at 719-333-3305 or 719-333-3306, or email AFOSI.Det439.ForeignTravel@us.af.mil." },
+    { text: "Complete the Air Force Office of Special Investigations (OSI) foreign travel brief, if required. Call OSI Detachment 439 at 719-333-3305 or 719-333-3306, or email AFOSI.Det439.ForeignTravel@us.af.mil." },
     { text: "Fill out the CW Force Protection and Emergency Travel Plan below, and digitally sign Section E.2." },
-    { text: "Complete Antiterrorism (AT) Level 1 training in JKO and save the certificate.", link: "https://jko.jten.mil/courses/AT-level1/launch.html", linkText: "Open JKO" },
+    { text: "Complete Antiterrorism (AT) Level 1 training in Joint Knowledge Online (JKO) and save the certificate.", link: "https://jko.jten.mil/courses/AT-level1/launch.html", linkText: "Open JKO" },
     { text: "Fill out the eSSS, the Foreign Travel Checklist and the Detailed Itinerary below." },
     { text: "Combine the eSSS, checklist, Force Protection Plan, itinerary, FCG Sections I and IV, AT Level 1 certificate, any other certificates and the APACS confirmation into one PDF Portfolio. Send it to the squadron executive by the deadline." }
   ];
@@ -301,7 +336,7 @@
     form99: {
       name: "AFCW IMT 99, Request to Exceed Limits / Special Pass",
       source: "Use the blank Form 99 below, or upload your own copy.",
-      guide: "Fill the cadet, pass and location blocks. Fill the automobile and flight blocks only if they apply. Leave the approval boxes and signature for the AOC or AMT.",
+      guide: "Fill the cadet, pass and location blocks. Fill the automobile and flight blocks only if they apply. Leave the approval boxes and signature for the Air Officer Commanding (AOC) or Academy Military Trainer (AMT).",
       files: [{ label: "Load the blank Form 99", url: "assets/forms/afcw-imt-99.pdf", name: "Lastname_AFCW_Form_99_Request_to_Exceed_Limits_DDMONYYYY.pdf", def: "form99" }]
     },
     oconus: {
@@ -331,8 +366,9 @@
     },
     form174: {
       name: "AF Form 174, Record of Individual Counseling",
-      source: "Download the blank form from the Air Force e-Publishing website, www.e-publishing.af.mil, then upload it below.",
-      guide: "State the issue, the standard and what the member must do to meet it. Record the member's comments in their own words, and set a follow-up date."
+      source: "Use the blank Form 174 below for general counseling, either positive or corrective. You can also upload your own copy.",
+      guide: "State the issue, the standard and what the cadet must do to meet it. Record the cadet's comments in their own words. When both of you have signed, send the Form 174 to the squadron first sergeant.",
+      files: [{ label: "Load the blank Form 174", url: "assets/forms/af-form-174.pdf", name: "Lastname_AF_Form_174_DDMONYYYY.pdf", def: "form174" }]
     },
     own: {
       name: "Your own template",

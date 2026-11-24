@@ -38,8 +38,8 @@
           { text: "This memorandum responds to the Report of Conduct at Reference (a). The report alleges that on 28 October 2026 I (1) signed in 20 minutes late from a day pass and (2) did not sign out on FalconNet. I accept responsibility for the late sign-in. I respectfully contest the second allegation." },
           { text: "I address each allegation below." },
           { text: "Late sign-in. I returned 20 minutes after my pass expired. I did not plan enough time for traffic, and I make no excuse for it. On every future pass, I will plan to return at least 30 minutes early.", sub: true },
-          { text: "FalconNet sign-out. I signed out on FalconNet at 1702, before I departed, as Reference (b), paragraph 5.4, requires. A screenshot of the entry is attached.", sub: true },
-          { text: "I respectfully request that the second allegation be removed from Reference (a) and that any sanction address the late sign-in only." },
+          { text: "FalconNet sign-out. I signed out on FalconNet at 1702, before I departed, as Reference (b), paragraph 5.4, requires. I attached a screenshot of the entry.", sub: true },
+          { text: "I respectfully request that you remove the second allegation from Reference (a) and limit any sanction to the late sign-in." },
           { text: "I understand the standard expected of a C1C, and I am committed to meeting it." }
         ],
         atts: ["FalconNet sign-out screenshot, 28 October 2026"]
@@ -87,6 +87,25 @@
           { text: "Posters hung with removable hooks.", sub: true },
           { text: "We will remove every decoration by 1900 on 15 February 2027 and return the room to inspection standards." },
           { text: "Please direct any questions to the undersigned." }
+        ],
+        atts: []
+      }
+    },
+    {
+      label: "Character letter",
+      type: "character",
+      state: {
+        to: { kind: "reviewing", symbol: "ALL REVIEWING AUTHORITIES", symbolEdited: false },
+        approval: { on: false, first: "", mi: "", last: "", grade: "Maj", service: "USAF", title: "", titleEdited: false },
+        me: { first: "Taylor", mi: "R", last: "Morgan", cls: "C1C", sq: "11", title: "Flight Commander, Alpha Flight" },
+        date: "2026-11-23",
+        subject: "Character Letter for C3C Casey M. Diaz",
+        refs: [],
+        paras: [
+          { text: "I am C1C Taylor R. Morgan, Flight Commander of Alpha Flight, Cadet Squadron 11 (CS-11). I have led cadets for 3 years and now supervise 24 cadets. I was named the CS-11 Cadet of the Quarter for summer 2026." },
+          { text: "I have known C3C Diaz since August 2025, when C3C Diaz joined Alpha Flight. Our contact is duty-related. As the flight commander, I observe C3C Diaz daily at formations, training and room inspections." },
+          { text: "C3C Diaz is a dependable cadet who puts the flight first. In October 2026, C3C Diaz led weekly study sessions that helped four C4C cadets raise their grades. C3C Diaz volunteers each month at a Colorado Springs food bank and scored in the top 10 percent of the squadron on the fall fitness test. I am aware of the allegations against C3C Diaz. They do not match the cadet I have observed every day for more than a year." },
+          { text: "I ask the reviewing authorities to weigh C3C Diaz's record of service and character. If you have any questions, contact me at 719-555-0142." }
         ],
         atts: []
       }
